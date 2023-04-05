@@ -1,0 +1,34 @@
+---
+name: lcm-dev
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.10
+  - pip
+  - setuptools_scm
+  - toml
+
+  # Package dependencies
+  - estimagic
+  - numpy
+  - scipy
+  - pandas
+  - jax>=0.3.0
+  - jaxlib>=0.3.0
+  - networkx
+  - dags
+  - pybaum
+  - pytask
+
+  # Misc
+  - jupyterlab
+  - matplotlib
+  - pdbpp
+  - pre-commit
+  - pydot
+  - pytest
+  - pytest-cov
+  - pytest-xdist
+  - pip:
+      - -e .
