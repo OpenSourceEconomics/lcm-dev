@@ -15,6 +15,13 @@ be used whenever a model requires randomness, and the params-getter function tel
 which parameter of the distribution (e.g. scale) needs to be estimated.
 
 
+## `function_evaluator.py`
+
+The module provides the `get_function_evaluator` function. The resulting evaluator
+can be used to create a function out of values that are defined on a grid. The resulting function can be handled as if it is an analytical function. This is useful for defining a value function that acts as if it is an analytical function, even though
+we calculated the exact values only on a grid.
+
+
 ## `grids.py`
 
 The module provides function that generate and work with different kind of grids.
@@ -31,6 +38,20 @@ The module provides internal container objects. All of these objects inherit fro
 ### `Model`
 
 Internal represenation of the user model.
+
+
+## `interpolation.py`
+
+The module provides functionality to interpolate a point in a grid. Currently implemented is `linear_interpolation`. It takes the grid information, i.e. the type,
+start, stop and number of grid points; it takes a point between the start and stop
+of the grid; and it takes the values a function attains on the grid points. The
+function then computes the general coordinate value of the point in the grid, and
+used interpolation to find the corresponding value at this coordinate. As an example, if
+- `grid_info = ('linspace', (0, 1, 3))`
+- `point = np.array([0.25])`
+- `values = np.array([1, 2, 3])`
+
+Then the interpolated value is 1.5.
 
 
 ## `model_functions.py`
