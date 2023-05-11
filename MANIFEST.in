@@ -20,7 +20,6 @@ exclude *.yaml
 exclude *.yml
 exclude *.pickle
 exclude pytask.ini
-exclude docs/*.md
 
 prune tests
 prune .envs
