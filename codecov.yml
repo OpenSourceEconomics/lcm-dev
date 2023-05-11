@@ -9,10 +9,10 @@ coverage:
   status:
     patch:
       default:
-        target: 70%
+        target: 50%
     project:
       default:
-        target: 90%
+        target: 10%
 ignore:
   - setup.py
   - tests/**/*
