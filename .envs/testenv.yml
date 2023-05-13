@@ -18,6 +18,7 @@ dependencies:
   - networkx
   - dags
   - pybaum
+  - pytask
 
   # Misc
   - pytest
