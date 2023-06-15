@@ -284,14 +284,63 @@ def _construct_model(delta, num_periods, param_dict):
                 delta=delta,
                 **param_dict,
             )
-    return v
+    return v, c_pol, work_dec_func
 
 
-def analytical_solution(grid, beta, wage, r, delta, num_periods):
+def simulate_c(c_fct, work_dec_func, wealth_levels, num_periods, wage, r):
+    """Simulate consumption for different initial wealth levels.
+
+    Args:
+        c_fct (list): consumption functions
+        work_dec_func (list): work decision functions
+        wealth_levels (list): initial wealth levels
+        num_periods (int): length of life
+        wage (float): labor income
+        r (float): interest rate
+    Returns:
+        numpy array: consumption levels
+
+    """
+    c_vec = np.zeros((num_periods, len(wealth_levels)))
+    work_dec_vec = np.zeros((num_periods, len(wealth_levels)))
+    m_vec = np.zeros((num_periods, len(wealth_levels)))
+    m_vec[0, :] = wealth_levels
+
+    for t in range(num_periods):
+        for i, m in enumerate(m_vec[t, :]):
+            work_dec_vec[t, i] = work_dec_func[t](m=m, work_status=True)
+            if t == 0:
+                c_vec[t, i] = c_fct[t](m=m, work_status=True)
+                m_vec[t + 1, i] = (1 + r) * (m - c_vec[t, i]) + wage * work_dec_vec[
+                    t,
+                    i,
+                ]
+            elif t > 0 and t < num_periods - 1:
+                c_vec[t, i] = c_fct[t](m=m, work_status=work_dec_vec[t - 1, i])
+                m_vec[t + 1, i] = (1 + r) * (m - c_vec[t, i]) + wage * work_dec_vec[
+                    t,
+                    i,
+                ]
+            else:
+                c_vec[t, i] = c_fct[t](m=m, work_status=work_dec_vec[t - 1, i])
+
+    return c_vec
+
+
+def analytical_solution(
+    wealth_grid,
+    simulation_grid,
+    beta,
+    wage,
+    r,
+    delta,
+    num_periods,
+):
     """Compute value function analytically on a grid.
 
     Args:
-        grid (list): grid of wealth levels
+        wealth_grid (list): grid of wealth levels
+        simulation_grid (list): grid of wealth levels for simulation
         beta (float): discount factor
         wage (float): labor income
         r (float): interest rate
@@ -310,15 +359,27 @@ def analytical_solution(grid, beta, wage, r, delta, num_periods):
         "tau": None,
     }
 
-    v_fct = _construct_model(
+    v_fct, c_pol, work_dec = _construct_model(
         delta=delta,
         num_periods=num_periods,
         param_dict=param_dict,
     )
 
     v = {
-        k: [list(map(v_fct[t], grid, [v] * len(grid))) for t in range(0, num_periods)]
+        k: [
+            list(map(v_fct[t], wealth_grid, [v] * len(wealth_grid)))
+            for t in range(0, num_periods)
+        ]
         for (k, v) in [["worker", True], ["retired", False]]
     }
 
-    return v
+    c_vec = simulate_c(
+        c_fct=c_pol,
+        work_dec_func=work_dec,
+        wealth_levels=simulation_grid,
+        num_periods=num_periods,
+        r=r,
+        wage=wage,
+    )
+
+    return v, c_vec

@@ -33,20 +33,32 @@ models = {
 }
 
 wealth_grid = np.linspace(1, 100, 10_000)
+simulation_grid = np.linspace(1, 100, 20)
 
 for model, params in models.items():
 
     @pytask.mark.task(
         id=model,
         kwargs={
-            "produces": BLD / "analytical_solution" / f"{model}.p",
+            "produces": {
+                "result_v": BLD / "analytical_solution" / f"{model}_v.p",
+                "result_c": BLD / "analytical_solution" / f"{model}_c.p",
+            },
             "params": params,
         },
     )
     def task_create_analytical_solution(produces, params):
         """Store analytical solution in a pickle file."""
-        result = analytical_solution(grid=wealth_grid, **params)
+        result_v, result_c = analytical_solution(
+            wealth_grid=wealth_grid,
+            simulation_grid=simulation_grid,
+            **params,
+        )
         pickle.dump(
-            result,
-            produces.open("wb"),
+            result_v,
+            produces["result_v"].open("wb"),
+        )
+        pickle.dump(
+            result_c,
+            produces["result_c"].open("wb"),
         )
