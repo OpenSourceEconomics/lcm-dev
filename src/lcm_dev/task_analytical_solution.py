@@ -41,15 +41,16 @@ for model, params in models.items():
         id=model,
         kwargs={
             "produces": {
-                "result_v": BLD / "analytical_solution" / f"{model}_v.p",
-                "result_c": BLD / "analytical_solution" / f"{model}_c.p",
+                "result_v": BLD / "analytical_solution" / f"{model}_v.pkl",
+                "result_c": BLD / "analytical_solution" / f"{model}_c.pkl",
+                "result_work_dec": BLD / "analytical_solution" / f"{model}_work.pkl",
             },
             "params": params,
         },
     )
     def task_create_analytical_solution(produces, params):
         """Store analytical solution in a pickle file."""
-        result_v, result_c = analytical_solution(
+        result_v, result_c, result_work_dec = analytical_solution(
             wealth_grid=wealth_grid,
             simulation_grid=simulation_grid,
             **params,
@@ -61,4 +62,8 @@ for model, params in models.items():
         pickle.dump(
             result_c,
             produces["result_c"].open("wb"),
+        )
+        pickle.dump(
+            result_work_dec,
+            produces["result_work_dec"].open("wb"),
         )

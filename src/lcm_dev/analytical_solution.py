@@ -324,7 +324,7 @@ def simulate_c(c_fct, work_dec_func, wealth_levels, num_periods, wage, r):
             else:
                 c_vec[t, i] = c_fct[t](m=m, work_status=work_dec_vec[t - 1, i])
 
-    return c_vec
+    return c_vec, work_dec_vec
 
 
 def analytical_solution(
@@ -373,7 +373,7 @@ def analytical_solution(
         for (k, v) in [["worker", True], ["retired", False]]
     }
 
-    c_vec = simulate_c(
+    c_vec, work_dec = simulate_c(
         c_fct=c_pol,
         work_dec_func=work_dec,
         wealth_levels=simulation_grid,
@@ -382,4 +382,4 @@ def analytical_solution(
         wage=wage,
     )
 
-    return v, c_vec
+    return v, c_vec, work_dec
