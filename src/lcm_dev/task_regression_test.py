@@ -1,4 +1,8 @@
-"""Save LCM solution and simulation output for regression testing."""
+"""Save LCM solution and simulation output for regression testing.
+
+This task needs to run again when the example model `PHELPS_DEATON` changes.
+
+"""
 import json
 
 import jax.numpy as jnp
@@ -36,7 +40,7 @@ def task_save_lcm_output(produces):
         },
     )
 
-    # Convert output to JSON seriazible format
+    # Convert output to JSON serializable format
     solution = [sol.tolist() for sol in solution]
     simulation = tree_map(lambda x: x.tolist(), simulation)
 
