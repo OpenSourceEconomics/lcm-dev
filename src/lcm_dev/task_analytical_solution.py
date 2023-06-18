@@ -45,7 +45,8 @@ for model, params in models.items():
     )
     def task_create_analytical_solution(produces, params):
         """Store analytical solution in a pickle file."""
+        result = analytical_solution(grid=wealth_grid, **params)
         pickle.dump(
-            analytical_solution(grid=wealth_grid, **params),
+            result,
             produces.open("wb"),
         )
