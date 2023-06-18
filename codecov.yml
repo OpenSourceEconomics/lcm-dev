@@ -15,4 +15,6 @@ coverage:
         target: 10%
 ignore:
   - setup.py
-  - tests/**/*
+  - '**/__init__.py'
+  - '**/task_*.py'
+  - tests
