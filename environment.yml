@@ -32,4 +32,4 @@ dependencies:
   - pytest-xdist
   - pip:
       - -e .
-      - git+https://github.com/opensourceeconomics/lcm.git@simulation
+      - -e ../lcm
