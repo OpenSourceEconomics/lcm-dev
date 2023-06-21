@@ -30,3 +30,4 @@ dependencies:
   - pydata-sphinx-theme>=0.3.0
   - pip:
       - -e ../
+      - git+https://github.com/opensourceeconomics/lcm.git@simulation
