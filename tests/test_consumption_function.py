@@ -261,6 +261,34 @@ test_cases_policy_func_vector = [
     },
 ]
 
+test_cases_consumption = [
+    {
+        "inputs": {
+            "work_status": False,
+            "policy_dict": {
+                "retired": lambda wealth: wealth**2,
+                "worker": lambda wealth: wealth**3,
+            },
+            "wt": [-np.inf, np.inf],
+        },
+        "expected_func": lambda wealth: wealth**2,
+    },
+    {
+        "inputs": {
+            "work_status": True,
+            "policy_dict": {
+                "retired": lambda wealth: wealth**2,
+                "worker": [
+                    lambda wealth: wealth**3,
+                    lambda wealth: wealth**4,
+                ],
+            },
+            "wt": [-np.inf, 0, np.inf],
+        },
+        "expected_func": lambda wealth: wealth**3 if wealth < 0 else wealth**4,
+    },
+]
+
 
 @pytest.mark.parametrize("test", test_cases_liquidity)
 def test_liquidity_constrained_consumption(test):
@@ -297,3 +325,15 @@ def test_policy_func_vector(test):
     aaae(solution_ret, test["expected"]["retired"])
     for sol, exp in zip(solution_wrk, test["expected"]["worker"]):
         aaae(sol, exp)
+
+
+@pytest.mark.parametrize("test", test_cases_consumption)
+def test_consumption(test):
+    """Test final consumption function."""
+    wealth_level = np.linspace(0, 100, 12)
+    expected_solution = [test["expected_func"](wealth) for wealth in wealth_level]
+    solution = [
+        analytical_solution._consumption(wealth, **test["inputs"])  # noqa: SLF001
+        for wealth in wealth_level
+    ]
+    aaae(solution, expected_solution)

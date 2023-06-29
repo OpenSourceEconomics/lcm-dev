@@ -618,6 +618,7 @@ def simulate_cons_work_response(
     Returns:
         numpy array: consumption levels
         numpy array: work decision
+        numpy array: wealth levels next period
 
     """
     work_dec_vec = np.zeros(len(wealth_levels))
@@ -717,14 +718,16 @@ def analytical_solution(
         num_periods (int): length of life
     Returns:
         list: values of value function
+        list: simulated consumption levels
+        list: simulated work decisions
 
     """
     # Unpack parameters
 
     param_dict = {
-        "beta": beta,
-        "wage": wage,
-        "interest_rate": interest_rate,
+        "beta": float(beta),
+        "wage": float(wage),
+        "interest_rate": float(interest_rate),
         "tau": None,
     }
 
