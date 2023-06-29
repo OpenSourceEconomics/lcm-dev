@@ -49,7 +49,7 @@ test_cases_root_fct = [
         },
         "expected": np.log(1 / 2),
     },
-    # Value of root function with v_prime
+    # Value of root function with non-trivial v_prime
     {
         "inputs": {
             "wealth": 50,
@@ -68,6 +68,7 @@ test_cases_root_fct = [
 ]
 
 test_cases_wealth_thresholds_kinks_discs = [
+    # Test root finding for trivial value function
     {
         "inputs": {
             "v_prime": lambda wealth, work_status: 0,  # noqa: ARG005
@@ -77,7 +78,7 @@ test_cases_wealth_thresholds_kinks_discs = [
             "delta": 0.1,
             "bracket": 0,
             "consumption_policy": [
-                lambda wealth: -1,  # noqa: ARG005
+                lambda wealth: None,  # noqa: ARG005
                 lambda wealth: wealth,
                 lambda wealth: np.exp(0),  # noqa: ARG005
             ],
@@ -86,23 +87,38 @@ test_cases_wealth_thresholds_kinks_discs = [
         },
         "expected": 1.0,
     },
-]
-
-test_cases_wealth_threshold_length = [
-    # Wealth thresholds without v_prime
+    # Test root finding for non-trivial value function
     {
         "inputs": {
-            "v_prime": lambda wealth, work_status: 0,  # noqa: ARG005
+            "v_prime": lambda wealth, work_status: wealth,  # noqa: ARG005
+            "wage": 0.0,
+            "interest_rate": 0,
+            "beta": 0.95,
+            "delta": 0.0,
+            "bracket": 0,
+            "consumption_policy": [
+                None,
+                lambda wealth: wealth + 1,
+                lambda wealth: -wealth + 1,
+            ],
+            "ret_threshold": 10,
+            "wealth_thresholds": [None, -10],
+        },
+        "expected": 0.0,
+    },
+]
+
+test_cases_wealth_threshold = [
+    # Check analytical calculation of thresholds
+    {
+        "inputs": {
+            "v_prime": None,
             "wage": 3.0,
             "interest_rate": 0,
             "beta": 0.95,
             "delta": 0.1,
             "tau": 1,
-            "consumption_policy": [
-                lambda wealth: wealth,
-                lambda wealth: (wealth + 3) / (1.95),
-                lambda wealth: (wealth) / (1.95),
-            ],
+            "consumption_policy": [],
         },
         "expected": {
             "len_array": 4,
@@ -114,8 +130,35 @@ test_cases_wealth_threshold_length = [
             ],
         },
     },
-    # Wealth thresholds with v_prime
-    # ...
+    # Check threshold calculation via root finding
+    {
+        "inputs": {
+            "v_prime": lambda wealth, work_status: wealth,  # noqa: ARG005
+            "wage": 0.0,
+            "interest_rate": 0,
+            "beta": 0.95,
+            "delta": 0.1,
+            "tau": 2,
+            "consumption_policy": [
+                None,
+                lambda wealth: -wealth + 1.0,
+                lambda wealth: wealth + 1.0,
+                lambda wealth: -wealth + 1.0,
+                None,
+            ],
+        },
+        "expected": {
+            "len_array": 6,
+            "wealth_thresholds": [
+                -np.inf,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                np.inf,
+            ],
+        },
+    },
 ]
 
 test_cases_piecewise_conditions = [
@@ -146,7 +189,7 @@ def test_wealth_thresholds_kinks_discs(test):
     )
 
 
-@pytest.mark.parametrize("test", test_cases_wealth_threshold_length)
+@pytest.mark.parametrize("test", test_cases_wealth_threshold)
 def test_compute_wealth_thresholds_length(test):
     """Test the wealth thresholds function."""
     wt = analytical_solution._compute_wealth_tresholds(**test["inputs"])  # noqa: SLF001
