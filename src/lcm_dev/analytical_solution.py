@@ -1,4 +1,5 @@
 """Implementation of analytical solution by Iskhakov et al (2017)."""
+# ruff: noqa: FBT003
 from functools import partial
 
 import numpy as np
@@ -192,17 +193,25 @@ def root_function(
 
     """
     return (
-        utility(consumption=consumption_lb(wealth), work_dec=True, delta=delta)
-        - utility(consumption=consumption_ub(wealth), work_dec=True, delta=delta)
+        utility(
+            consumption=consumption_lb(wealth),
+            work_dec=np.bool_(True),
+            delta=delta,
+        )
+        - utility(
+            consumption=consumption_ub(wealth),
+            work_dec=np.bool_(True),
+            delta=delta,
+        )
         + beta
         * v_prime(
             wealth=(1 + interest_rate) * (wealth - consumption_lb(wealth)) + wage,
-            work_status=True,
+            work_status=np.bool_(True),
         )
         - beta
         * v_prime(
             wealth=(1 + interest_rate) * (wealth - consumption_ub(wealth)) + wage,
-            work_status=True,
+            work_status=np.bool_(True),
         )
     )
 
@@ -351,7 +360,11 @@ def _work_decision(wealth, work_status, wealth_thresholds):
 
     """
     ret_threshold = wealth_thresholds[-2]
-    return bool(wealth < ret_threshold) if work_status is True else False
+    return (
+        np.bool_(wealth < ret_threshold)
+        if work_status is np.bool_(True)
+        else np.bool_(False)
+    )
 
 
 def _consumption(wealth, work_status, policy_dict, wt):
@@ -593,6 +606,7 @@ def _construct_model(delta, num_periods, param_dict):
                 delta=delta,
                 **param_dict,
             )
+
     return value_func, c_pol, work_dec_func
 
 
@@ -626,8 +640,11 @@ def simulate_cons_work_response(
     wealth_next_period = np.zeros(len(wealth_levels))
 
     if period == 0:
-        work_decision_function = partial(work_decision_function, work_status=True)
-        consumption_function = partial(consumption_function, work_status=True)
+        work_decision_function = partial(
+            work_decision_function,
+            work_status=np.bool_(True),
+        )
+        consumption_function = partial(consumption_function, work_status=np.bool_(True))
         work_dec_vec = list(map(work_decision_function, wealth_levels))
         c_vec = list(map(consumption_function, wealth_levels))
         wealth_next_period = (1 + interest_rate) * (
@@ -647,6 +664,7 @@ def simulate_cons_work_response(
             wealth_next_period[grid_id] = (1 + interest_rate) * (
                 wealth - c_vec[grid_id]
             ) + wage * work_dec_vec[grid_id]
+
     return c_vec, work_dec_vec, wealth_next_period
 
 
@@ -673,7 +691,7 @@ def simulate(
     """
     grid_size = len(wealth_levels)
     c_mat = np.zeros((num_periods, grid_size))
-    work_dec_mat = np.zeros((num_periods, grid_size))
+    work_dec_mat = np.zeros((num_periods, grid_size), dtype=bool)
     wealth_mat = np.zeros((num_periods + 1, grid_size))
     wealth_mat[0, :] = wealth_levels  # initial wealth levels
 
@@ -742,7 +760,10 @@ def analytical_solution(
             list(map(v_fct[t], wealth_grid, [work_status] * len(wealth_grid)))
             for t in range(0, num_periods)
         ]
-        for (worker_type, work_status) in [["worker", True], ["retired", False]]
+        for (worker_type, work_status) in [
+            ["worker", np.bool_(True)],
+            ["retired", np.bool_(False)],
+        ]
     }
 
     c_vec, work_dec = simulate(
