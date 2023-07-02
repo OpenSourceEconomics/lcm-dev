@@ -122,13 +122,16 @@ test_cases_analytical_solution = [
 
 test_cases_analytical_solution_work_decision = [
     {
-        "wealth_grid": np.linspace(1, 100, 12),
-        "simulation_grid": np.linspace(1, 100, 12),
-        "beta": 0.95,
-        "wage": 10.0,
-        "interest_rate": 0.0,
-        "delta": 1.0,
-        "num_periods": 3,
+        "kwargs": {
+            "wealth_grid": np.linspace(1, 100, 12),
+            "simulation_grid": np.linspace(1, 100, 12),
+            "beta": 0.95,
+            "wage": 10.0,
+            "interest_rate": 0.0,
+            "delta": 1.0,
+            "num_periods": 3,
+        },
+        "expected": 2,
     },
 ]
 
@@ -168,8 +171,8 @@ def test_analytical_solution(test_case):
     aaae(work_dec, expected["work_dec_vec"])
 
 
-@pytest.mark.parametrize("kwargs", test_cases_analytical_solution_work_decision)
-def test_analytical_solution_work_dec(kwargs):
+@pytest.mark.parametrize("test_case", test_cases_analytical_solution_work_decision)
+def test_analytical_solution_work_dec(test_case):
     """Test that work decision is not False in all periods for lowest wealth level."""
-    v, cons, work_dec = analytical_solution.analytical_solution(**kwargs)
-    assert np.sum(work_dec.T[0]) != 0
+    v, cons, work_dec = analytical_solution.analytical_solution(**test_case["kwargs"])
+    assert np.sum(work_dec.T[0]) == test_case["expected"]
