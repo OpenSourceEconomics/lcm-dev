@@ -1,5 +1,5 @@
 """Test the value functions of the analytical solution."""
-
+# ruff: noqa: FBT003
 import numpy as np
 import pytest
 from lcm_dev import analytical_solution
@@ -44,8 +44,8 @@ test_cases_value_func_workers = [
             "delta": 0.1,
             "interest_rate": 0.0,
             "wage": 1.0,
-            "work_status": True,
-            "work_dec_func": lambda wealth, work_status: True,  # noqa: ARG005
+            "work_status": np.bool_(True),
+            "work_dec_func": lambda wealth, work_status: np.bool_(True),  # noqa: ARG005
             "c_pol": lambda wealth, work_status: wealth,  # noqa: ARG005
             "v_prime": lambda wealth, work_status: 0.0,  # noqa: ARG005
         },
@@ -58,8 +58,8 @@ test_cases_value_func_workers = [
             "delta": 0.1,
             "interest_rate": 0.0,
             "wage": 1.0,
-            "work_status": True,
-            "work_dec_func": lambda wealth, work_status: True,  # noqa: ARG005
+            "work_status": np.bool_(True),
+            "work_dec_func": lambda wealth, work_status: np.bool_(True),  # noqa: ARG005
             "c_pol": lambda wealth, work_status: wealth,  # noqa: ARG005
             "v_prime": lambda wealth, work_status: np.log(wealth),  # noqa: ARG005
         },
@@ -72,8 +72,8 @@ test_cases_value_func_workers = [
             "delta": 0.1,
             "interest_rate": 0.0,
             "wage": 1.0,
-            "work_status": True,
-            "work_dec_func": lambda wealth, work_status: True,  # noqa: ARG005
+            "work_status": np.bool_(True),
+            "work_dec_func": lambda wealth, work_status: np.bool_(True),  # noqa: ARG005
             "c_pol": lambda wealth, work_status: wealth / 2,  # noqa: ARG005
             "v_prime": lambda wealth, work_status: np.log(wealth),  # noqa: ARG005
         },
@@ -87,7 +87,7 @@ test_cases_value_func = [
     # Value function retirees
     {
         "inputs": {
-            "work_status": False,
+            "work_status": np.bool_(False),
             "work_dec_func": None,
             "c_pol": None,
             "v_prime": None,
@@ -108,8 +108,8 @@ test_cases_value_func = [
             "delta": 0.1,
             "interest_rate": 0.0,
             "wage": 1.0,
-            "work_status": True,
-            "work_dec_func": lambda wealth, work_status: True,  # noqa: ARG005
+            "work_status": np.bool_(True),
+            "work_dec_func": lambda wealth, work_status: np.bool_(True),  # noqa: ARG005
             "c_pol": lambda wealth, work_status: wealth / 2,  # noqa: ARG005
             "v_prime": lambda wealth, work_status: np.log(wealth),  # noqa: ARG005
             "tau": None,
@@ -121,10 +121,10 @@ test_cases_value_func = [
 ]
 
 test_cases_value_func_last_period = [
-    ((10, False), np.log(10)),
-    ((10, True), np.log(10)),
-    ((-1, False), -np.inf),
-    ((-1, True), -np.inf),
+    ((10, np.bool_(False)), np.log(10)),
+    ((10, np.bool_(True)), np.log(10)),
+    ((-1, np.bool_(False)), -np.inf),
+    ((-1, np.bool_(True)), -np.inf),
 ]
 
 test_cases_construct_model = [
@@ -140,7 +140,7 @@ test_cases_construct_model = [
                 "tau": None,
             },
         },
-        "expected": ([np.log(10)], [10], [False]),
+        "expected": ([np.log(10)], [10], [np.bool_(False)]),
     },
     {
         "wealth": 10.0,
@@ -164,8 +164,8 @@ test_cases_construct_model = [
                 10,
             ],
             [
-                True,
-                False,
+                np.bool_(True),
+                np.bool_(False),
             ],
         ),
     },
@@ -226,8 +226,10 @@ def test_construct_model(test_case):
     )
     wealth = test_case["wealth"]
 
-    sol_work_dec = [work_dec(wealth, work_status=True) for work_dec in work_dec_vec]
-    sol_v = [v(wealth, work_status=True) for v in v_vec]
-    sol_c = [c(wealth, work_status=True) for c in c_vec]
+    sol_work_dec = [
+        work_dec(wealth, work_status=np.bool_(True)) for work_dec in work_dec_vec
+    ]
+    sol_v = [v(wealth, work_status=np.bool_(True)) for v in v_vec]
+    sol_c = [c(wealth, work_status=np.bool_(True)) for c in c_vec]
 
     aaae(test_case["expected"], (sol_v, sol_c, sol_work_dec))

@@ -353,10 +353,10 @@ def _work_decision(wealth, work_status, wealth_thresholds):
 
     Args:
         wealth (float): current wealth level
-        work_status (bool): work status from last period
+        work_status (np.bool_): work status from last period
         wealth_thresholds (list): list of wealth thresholds
     Returns:
-        bool: work decision
+        np.bool_: work decision
 
     """
     ret_threshold = wealth_thresholds[-2]
@@ -372,14 +372,14 @@ def _consumption(wealth, work_status, policy_dict, wt):
 
     Args:
         wealth (float): current wealth level
-        work_status (bool): work status from last period
+        work_status (np.bool_): work status from last period
         policy_dict (dict): dictionary of consumption policy functions
         wt (list): list of wealth thresholds
     Returns:
         float: consumption
 
     """
-    if work_status is False:
+    if work_status is np.bool_(False):
         cons = policy_dict["retired"](wealth)
 
     else:
@@ -432,7 +432,7 @@ def value_function_workers(
         delta (float): disutility of work
         interest_rate (float): interest rate
         wage (float): labor income
-        work_status (bool): work status from last period
+        work_status (np.bool_): work status from last period
         work_dec_func (function): work decision function
         c_pol (function): consumption policy function
         v_prime (function): continuation value of value function
@@ -478,7 +478,7 @@ def _value_function(
 
     Args:
         wealth (float): current wealth level
-        work_status (bool): work decision from last period
+        work_status (np.bool_): work decision from last period
         work_dec_func (function): work decision function
         c_pol (function): consumption policy function
         v_prime (function): continuation value of value function
@@ -493,7 +493,7 @@ def _value_function(
     """
     if wealth == 0:
         value = -np.inf
-    elif work_status is False:
+    elif work_status is np.bool_(False):
         value = value_function_retirees(
             wealth=wealth,
             beta=beta,
@@ -521,7 +521,7 @@ def value_function_last_period(wealth, work_status):  # noqa: ARG001
 
     Args:
         wealth (float): current wealth level
-        work_status (bool): work status from last period
+        work_status (np.bool_): work status from last period
     Returns:
         float: value function
 
@@ -534,7 +534,7 @@ def consumption_last_period(wealth, work_status):  # noqa: ARG001
 
     Args:
         wealth (float): current wealth level
-        work_status (bool): work status from last period
+        work_status (np.bool_): work status from last period
     Returns:
         float: consumption
 
@@ -547,12 +547,12 @@ def work_dec_last_period(wealth, work_status):  # noqa: ARG001
 
     Args:
         wealth (float): current wealth level
-        work_status (bool): work status from last period
+        work_status (np.bool_): work status from last period
     Returns:
-        bool: work decision
+        np.bool_: work decision
 
     """
-    return False
+    return np.bool_(False)
 
 
 def _construct_model(delta, num_periods, param_dict):
@@ -628,7 +628,7 @@ def simulate_cons_work_response(
         interest_rate (float): interest rate
         work_decision_function (function): work decision function
         consumption_function (function): consumption function
-        work_status_last_period (bool): work status from last period
+        work_status_last_period (np.bool_): work status from last period
     Returns:
         numpy array: consumption levels
         numpy array: work decision
@@ -691,7 +691,7 @@ def simulate(
     """
     grid_size = len(wealth_levels)
     c_mat = np.zeros((num_periods, grid_size))
-    work_dec_mat = np.zeros((num_periods, grid_size), dtype=bool)
+    work_dec_mat = np.zeros((num_periods, grid_size), dtype=np.bool_)
     wealth_mat = np.zeros((num_periods + 1, grid_size))
     wealth_mat[0, :] = wealth_levels  # initial wealth levels
 

@@ -1,4 +1,5 @@
 """Compare results of analytical solution with a hard-coded two period model."""
+# ruff: noqa: FBT003
 import numpy as np
 import pytest
 from lcm_dev import analytical_solution
@@ -194,7 +195,6 @@ def test_analytical_solution(params):
     """Test analytical solution against simple two-period model."""
     wealth_grid = np.linspace(1, 100, 12)
     simulation_grid = np.linspace(1, 100, 12)
-
     v, cons, work_dec = analytical_solution.analytical_solution(
         wealth_grid=wealth_grid,
         simulation_grid=simulation_grid,

@@ -1,5 +1,5 @@
 """Test the consumptions functions of the analytical solution."""
-
+# ruff: noqa: FBT003
 import numpy as np
 import pytest
 from lcm_dev import analytical_solution
@@ -264,7 +264,7 @@ test_cases_policy_func_vector = [
 test_cases_consumption = [
     {
         "inputs": {
-            "work_status": False,
+            "work_status": np.bool_(False),
             "policy_dict": {
                 "retired": lambda wealth: wealth**2,
                 "worker": lambda wealth: wealth**3,
@@ -275,7 +275,7 @@ test_cases_consumption = [
     },
     {
         "inputs": {
-            "work_status": True,
+            "work_status": np.bool_(True),
             "policy_dict": {
                 "retired": lambda wealth: wealth**2,
                 "worker": [
