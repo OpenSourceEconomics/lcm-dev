@@ -2,7 +2,9 @@
 # ruff: noqa: FBT003
 import numpy as np
 import pytest
-from lcm_dev import analytical_solution
+from lcm_dev.analytical_solution import (
+    analytical_solution,
+)
 from numpy.testing import assert_array_almost_equal as aaae
 
 
@@ -195,7 +197,7 @@ def test_analytical_solution(params):
     """Test analytical solution against simple two-period model."""
     wealth_grid = np.linspace(1, 100, 12)
     simulation_grid = np.linspace(1, 100, 12)
-    v, cons, work_dec = analytical_solution.analytical_solution(
+    v, cons, work_dec = analytical_solution(
         wealth_grid=wealth_grid,
         simulation_grid=simulation_grid,
         num_periods=2,

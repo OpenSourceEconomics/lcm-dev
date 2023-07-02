@@ -2,44 +2,47 @@
 # ruff: noqa: FBT003
 import numpy as np
 import pytest
-from lcm_dev import analytical_solution
+from lcm_dev.analytical_solution import (
+    _construct_model,
+    _value_function,
+    value_function_last_period,
+    value_function_retirees,
+    value_function_workers,
+)
 from numpy.testing import assert_array_almost_equal as aaae
 from numpy.testing import assert_array_almost_equal as aae
 
 test_cases_value_func_retirees = [
-    {
-        "inputs": {
-            "beta": 1.0,
-            "tau": 0,
-            "interest_rate": 0.0,
-        },
-        "expected_func": lambda wealth: np.log(wealth),
-    },
-    {
-        "inputs": {
-            "beta": 0.95,
-            "tau": 1,
-            "interest_rate": 0.0,
-        },
-        "expected_func": lambda wealth: np.log(wealth / 1.95)
-        + 0.95 * np.log(wealth - (wealth / 1.95)),
-    },
-    {
-        "inputs": {
-            "beta": 0.95,
-            "tau": 2,
-            "interest_rate": 0.1,
-        },
-        "expected_func": lambda wealth: np.log(wealth) * (1 + 0.95 + 0.95**2)
+    (10.0, 1.0, 0, 0.0, np.log(10.0)),
+    (20.0, 1.0, 0, 0.0, np.log(20.0)),
+    (10.0, 0.95, 1, 0.0, np.log(10.0 / 1.95) + 0.95 * np.log(10.0 - (10.0 / 1.95))),
+    (20.0, 0.95, 1, 0.0, np.log(20.0 / 1.95) + 0.95 * np.log(20.0 - (20.0 / 1.95))),
+    (
+        10.0,
+        0.95,
+        2,
+        0.1,
+        np.log(10.0) * (1 + 0.95 + 0.95**2)
         - np.log(1 + 0.95 + 0.95**2) * (1 + 0.95 + 0.95**2)
         + 0.95 * (np.log(0.95) + np.log(1.1)) * (1 + 0.95 + 0.95),
-    },
+    ),
+    (
+        20.0,
+        0.95,
+        2,
+        0.1,
+        np.log(20.0) * (1 + 0.95 + 0.95**2)
+        - np.log(1 + 0.95 + 0.95**2) * (1 + 0.95 + 0.95**2)
+        + 0.95 * (np.log(0.95) + np.log(1.1)) * (1 + 0.95 + 0.95),
+    ),
 ]
+
 
 test_cases_value_func_workers = [
     # Value function without continuation value
     {
         "inputs": {
+            "wealth": 10.0,
             "beta": 1.0,
             "delta": 0.1,
             "interest_rate": 0.0,
@@ -49,11 +52,12 @@ test_cases_value_func_workers = [
             "c_pol": lambda wealth, work_status: wealth,  # noqa: ARG005
             "v_prime": lambda wealth, work_status: 0.0,  # noqa: ARG005
         },
-        "expected_func": lambda wealth: np.log(wealth) - 0.1,
+        "expected": np.log(10.0) - 0.1,
     },
     # Value function with continuation value
     {
         "inputs": {
+            "wealth": 10.0,
             "beta": 0.95,
             "delta": 0.1,
             "interest_rate": 0.0,
@@ -63,11 +67,12 @@ test_cases_value_func_workers = [
             "c_pol": lambda wealth, work_status: wealth,  # noqa: ARG005
             "v_prime": lambda wealth, work_status: np.log(wealth),  # noqa: ARG005
         },
-        "expected_func": lambda wealth: np.log(wealth) - 0.1 + 0.95 * np.log(1.0),
+        "expected": np.log(10.0) - 0.1 + 0.95 * np.log(1.0),
     },
     # Value function with continuation value and nontrivial consumption
     {
         "inputs": {
+            "wealth": 10.0,
             "beta": 0.95,
             "delta": 0.1,
             "interest_rate": 0.0,
@@ -77,9 +82,7 @@ test_cases_value_func_workers = [
             "c_pol": lambda wealth, work_status: wealth / 2,  # noqa: ARG005
             "v_prime": lambda wealth, work_status: np.log(wealth),  # noqa: ARG005
         },
-        "expected_func": lambda wealth: np.log(wealth / 2)
-        - 0.1
-        + 0.95 * np.log(1.0 + wealth / 2),
+        "expected": np.log(10.0 / 2) - 0.1 + 0.95 * np.log(1.0 + 10.0 / 2),
     },
 ]
 
@@ -87,6 +90,7 @@ test_cases_value_func = [
     # Value function retirees
     {
         "inputs": {
+            "wealth": 10.0,
             "work_status": np.bool_(False),
             "work_dec_func": None,
             "c_pol": None,
@@ -97,13 +101,14 @@ test_cases_value_func = [
             "interest_rate": 0.1,
             "wage": None,
         },
-        "expected_func": lambda wealth: np.log(wealth) * (1 + 0.95 + 0.95**2)
+        "expected": np.log(10.0) * (1 + 0.95 + 0.95**2)
         - np.log(1 + 0.95 + 0.95**2) * (1 + 0.95 + 0.95**2)
         + 0.95 * (np.log(0.95) + np.log(1.1)) * (1 + 0.95 + 0.95),
     },
     # Value function workers
     {
         "inputs": {
+            "wealth": 10.0,
             "beta": 0.95,
             "delta": 0.1,
             "interest_rate": 0.0,
@@ -114,17 +119,15 @@ test_cases_value_func = [
             "v_prime": lambda wealth, work_status: np.log(wealth),  # noqa: ARG005
             "tau": None,
         },
-        "expected_func": lambda wealth: np.log(wealth / 2)
-        - 0.1
-        + 0.95 * np.log(1.0 + wealth / 2),
+        "expected": np.log(10.0 / 2) - 0.1 + 0.95 * np.log(1.0 + 10.0 / 2),
     },
 ]
 
 test_cases_value_func_last_period = [
-    ((10, np.bool_(False)), np.log(10)),
-    ((10, np.bool_(True)), np.log(10)),
-    ((-1, np.bool_(False)), -np.inf),
-    ((-1, np.bool_(True)), -np.inf),
+    (10, np.bool_(False), np.log(10)),
+    (10, np.bool_(True), np.log(10)),
+    (-1, np.bool_(False), -np.inf),
+    (-1, np.bool_(True), -np.inf),
 ]
 
 test_cases_construct_model = [
@@ -172,45 +175,43 @@ test_cases_construct_model = [
 ]
 
 
-@pytest.mark.parametrize("test_case", test_cases_value_func_retirees)
-def test_value_func_retirees(test_case):
-    wealth_levels = np.linspace(1, 100, 12)
-    expected = [test_case["expected_func"](wealth) for wealth in wealth_levels]
-    solution = [
-        analytical_solution.value_function_retirees(wealth, **test_case["inputs"])
-        for wealth in wealth_levels
-    ]
+@pytest.mark.parametrize(
+    ("wealth", "beta", "tau", "interest_rate", "expected"),
+    test_cases_value_func_retirees,
+)
+def test_value_func_retirees(wealth, beta, tau, interest_rate, expected):
+    solution = value_function_retirees(
+        wealth=wealth,
+        beta=beta,
+        tau=tau,
+        interest_rate=interest_rate,
+    )
     aaae(expected, solution)
 
 
 @pytest.mark.parametrize("test_case", test_cases_value_func_workers)
 def test_value_func_workers(test_case):
-    wealth_levels = np.linspace(1, 100, 12)
-    expected = [test_case["expected_func"](wealth) for wealth in wealth_levels]
-    solution = [
-        analytical_solution.value_function_workers(wealth, **test_case["inputs"])
-        for wealth in wealth_levels
-    ]
-    aaae(expected, solution)
+    solution = value_function_workers(**test_case["inputs"])
+    aaae(test_case["expected"], solution)
 
 
 @pytest.mark.parametrize("test_case", test_cases_value_func)
 def test_value_func(test_case):
-    wealth_levels = np.linspace(1, 100, 12)
-    expected = [test_case["expected_func"](wealth) for wealth in wealth_levels]
-    solution = [
-        analytical_solution._value_function(  # noqa: SLF001
-            wealth,
-            **test_case["inputs"],
-        )
-        for wealth in wealth_levels
-    ]
-    aaae(expected, solution)
+    solution = _value_function(
+        **test_case["inputs"],
+    )
+    aaae(test_case["expected"], solution)
 
 
-@pytest.mark.parametrize(("inputs", "expected"), test_cases_value_func_last_period)
-def test_value_func_last_period(inputs, expected):
-    solution = analytical_solution.value_function_last_period(*inputs)
+@pytest.mark.parametrize(
+    ("wealth", "work_status", "expected"),
+    test_cases_value_func_last_period,
+)
+def test_value_func_last_period(wealth, work_status, expected):
+    solution = value_function_last_period(
+        wealth=wealth,
+        work_status=work_status,
+    )
     aae(expected, solution)
 
 
@@ -221,7 +222,7 @@ def test_construct_model(test_case):
     First period value function, consumption policy and work decision function.
 
     """
-    v_vec, c_vec, work_dec_vec = analytical_solution._construct_model(  # noqa: SLF001
+    v_vec, c_vec, work_dec_vec = _construct_model(
         **test_case["inputs"],
     )
     wealth = test_case["wealth"]

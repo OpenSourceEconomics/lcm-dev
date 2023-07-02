@@ -2,37 +2,38 @@
 
 import numpy as np
 import pytest
-from lcm_dev import analytical_solution
+from lcm_dev.analytical_solution import (
+    _compute_wealth_tresholds,
+    _evaluate_piecewise_conditions,
+    retirement_threshold,
+    root_function,
+    wealth_thresholds_kinks_discs,
+)
 from numpy.testing import assert_almost_equal as aae
 from numpy.testing import assert_array_almost_equal as aaae
 
 test_cases_ret_threshold = [
     # 1 period before end of life
-    {
-        "inputs": {
-            "wage": 3.0,
-            "interest_rate": 0,
-            "beta": 0.95,
-            "delta": 0.1,
-            "tau": 1,
-        },
-        "expected": (
-            3 * np.exp(-0.1 * (1.95) ** (-1)) / (1 - np.exp(-0.1 * (1.95) ** (-1)))
-        ),
-    },
+    (
+        3.0,
+        0.0,
+        0.95,
+        0.1,
+        1,
+        3 * np.exp(-0.1 * (1.95) ** (-1)) / (1 - np.exp(-0.1 * (1.95) ** (-1))),
+    ),
     # 2 periods before end of life
-    {
-        "inputs": {
-            "wage": 3.0,
-            "interest_rate": 0.1,
-            "beta": 0.95,
-            "delta": 0.1,
-            "tau": 2,
-        },
-        "expected": (3 / 1.1 * np.exp(-0.1 * (1.95 + 0.95**2) ** (-1)))
+    (
+        3.0,
+        0.1,
+        0.95,
+        0.1,
+        2,
+        (3 / 1.1 * np.exp(-0.1 * (1.95 + 0.95**2) ** (-1)))
         / (1 - np.exp(-0.1 * (1.95 + 0.95**2) ** (-1))),
-    },
+    ),
 ]
+
 
 test_cases_root_fct = [
     # Value of root function without v_prime
@@ -162,21 +163,32 @@ test_cases_wealth_threshold = [
 ]
 
 test_cases_piecewise_conditions = [
-    ((0.5, [0, 1, 2, 3]), [True, False, False]),
-    ((10, [0, 10, 20, 30]), [False, True, False]),
+    # wealth, thresholds, expected
+    (0.5, [0, 1, 2, 3], [True, False, False]),
+    (10, [0, 10, 20, 30], [False, True, False]),
 ]
 
 
-@pytest.mark.parametrize("test", test_cases_ret_threshold)
-def test_retirement_threshold(test):
+@pytest.mark.parametrize(
+    ("wage", "interest_rate", "beta", "delta", "tau", "expected"),
+    test_cases_ret_threshold,
+)
+def test_retirement_threshold(wage, interest_rate, beta, delta, tau, expected):
     """Test the retirement threshold function."""
-    aae(analytical_solution.retirement_threshold(**test["inputs"]), test["expected"])
+    retirement_threshold_solution = retirement_threshold(
+        wage=wage,
+        interest_rate=interest_rate,
+        beta=beta,
+        delta=delta,
+        tau=tau,
+    )
+    aae(retirement_threshold_solution, expected)
 
 
 @pytest.mark.parametrize("test", test_cases_root_fct)
 def test_root_fct(test):
     """Test the root function."""
-    sol_root_fct = analytical_solution.root_function(**test["inputs"])
+    sol_root_fct = root_function(**test["inputs"])
     aae(sol_root_fct, test["expected"])
 
 
@@ -184,7 +196,7 @@ def test_root_fct(test):
 def test_wealth_thresholds_kinks_discs(test):
     """Test the wealth thresholds, kinks and discontinuities function."""
     aae(
-        analytical_solution.wealth_thresholds_kinks_discs(**test["inputs"]),
+        wealth_thresholds_kinks_discs(**test["inputs"]),
         test["expected"],
     )
 
@@ -192,15 +204,21 @@ def test_wealth_thresholds_kinks_discs(test):
 @pytest.mark.parametrize("test", test_cases_wealth_threshold)
 def test_compute_wealth_thresholds_length(test):
     """Test the wealth thresholds function."""
-    wt = analytical_solution._compute_wealth_tresholds(**test["inputs"])  # noqa: SLF001
+    wt = _compute_wealth_tresholds(**test["inputs"])
     assert len(wt) == test["expected"]["len_array"]
     aae(wt, test["expected"]["wealth_thresholds"])
 
 
-@pytest.mark.parametrize(("inputs", "expected"), test_cases_piecewise_conditions)
-def test_evaluate_piecewise_conditions(inputs, expected):
+@pytest.mark.parametrize(
+    ("wealth", "thresholds", "expected"),
+    test_cases_piecewise_conditions,
+)
+def test_evaluate_piecewise_conditions(wealth, thresholds, expected):
     """Test the piecewise conditions function."""
     aaae(
-        analytical_solution._evaluate_piecewise_conditions(*inputs),  # noqa: SLF001
+        _evaluate_piecewise_conditions(
+            wealth=wealth,
+            wealth_thresholds=thresholds,
+        ),
         expected,
     )

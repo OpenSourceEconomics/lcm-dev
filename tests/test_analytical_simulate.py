@@ -2,7 +2,11 @@
 
 import numpy as np
 import pytest
-from lcm_dev import analytical_solution
+from lcm_dev.analytical_solution import (
+    analytical_solution,
+    simulate,
+    simulate_cons_work_response,
+)
 from numpy.testing import assert_array_almost_equal as aaae
 
 test_cases_simulate_cons_work_resp = [
@@ -141,7 +145,7 @@ def test_simulate_cons_work_resp(test_case):
     """Test the simulate_cons_work_response function."""
     expected = test_case["expected"]
     inputs = test_case["inputs"]
-    c, work_dec, wealth_next_period = analytical_solution.simulate_cons_work_response(
+    c, work_dec, wealth_next_period = simulate_cons_work_response(
         **inputs,
     )
     aaae(c, expected["consumption"])
@@ -154,7 +158,7 @@ def test_simulate(test_case):
     """Test the simulate function."""
     expected = test_case["expected"]
     inputs = test_case["inputs"]
-    cons, work_dec = analytical_solution.simulate(**inputs)
+    cons, work_dec = simulate(**inputs)
     aaae(cons, expected["consumption"])
     aaae(work_dec, expected["work_dec_vec"])
 
@@ -164,7 +168,7 @@ def test_analytical_solution(test_case):
     """Test the simulate function."""
     expected = test_case["expected"]
     inputs = test_case["inputs"]
-    v, cons, work_dec = analytical_solution.analytical_solution(**inputs)
+    v, cons, work_dec = analytical_solution(**inputs)
     aaae(v["worker"], expected["v"]["worker"])
     aaae(v["retired"], expected["v"]["retired"])
     aaae(cons, expected["c"])
@@ -174,5 +178,5 @@ def test_analytical_solution(test_case):
 @pytest.mark.parametrize("test_case", test_cases_analytical_solution_work_decision)
 def test_analytical_solution_work_dec(test_case):
     """Test that work decision is not False in all periods for lowest wealth level."""
-    v, cons, work_dec = analytical_solution.analytical_solution(**test_case["kwargs"])
+    v, cons, work_dec = analytical_solution(**test_case["kwargs"])
     assert np.sum(work_dec.T[0]) == test_case["expected"]

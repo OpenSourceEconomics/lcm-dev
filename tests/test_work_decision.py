@@ -2,7 +2,9 @@
 # ruff: noqa: FBT003
 import numpy as np
 import pytest
-from lcm_dev import analytical_solution
+from lcm_dev.analytical_solution import (
+    _work_decision,
+)
 
 test_cases_work_dec = [
     ((10, np.bool_(False), [0, 10, 20, 30]), np.bool_(False)),
@@ -16,4 +18,4 @@ test_cases_work_dec = [
 @pytest.mark.parametrize(("inputs", "expected"), test_cases_work_dec)
 def test_evaluate_piecewise_conditions(inputs, expected):
     """Test the piecewise conditions function."""
-    assert analytical_solution._work_decision(*inputs) == expected  # noqa: SLF001
+    assert _work_decision(*inputs) == expected

@@ -1,62 +1,31 @@
 """Test the utility function of the analytical solution."""
+# ruff: noqa: FBT003
 
 import numpy as np
 import pytest
-from lcm_dev import analytical_solution
+from lcm_dev.analytical_solution import (
+    utility,
+)
 from numpy.testing import assert_almost_equal as aae
 
 utility_test_cases = [
-    (
-        {
-            "consumption": 1.0,
-            "work_dec": False,
-            "delta": 0.0,
-        },
-        0.0,
-    ),
-    (
-        {
-            "consumption": 1.0,
-            "work_dec": True,
-            "delta": 0.0,
-        },
-        0.0,
-    ),
-    (
-        {
-            "consumption": 1.0,
-            "work_dec": True,
-            "delta": 0.5,
-        },
-        -0.5,
-    ),
-    (
-        {
-            "consumption": 5.0,
-            "work_dec": False,
-            "delta": 0.5,
-        },
-        np.log(5.0),
-    ),
-    (
-        {
-            "consumption": 5.0,
-            "work_dec": True,
-            "delta": 0.5,
-        },
-        np.log(5.0) - 0.5,
-    ),
-    (
-        {
-            "consumption": -1.0,
-            "work_dec": False,
-            "delta": 0.5,
-        },
-        -np.inf,
-    ),
+    (1.0, np.bool_(False), 0.0, 0.0),
+    (1.0, np.bool_(True), 0.0, 0.0),
+    (1.0, np.bool_(True), 0.5, -0.5),
+    (5.0, np.bool_(False), 0.5, np.log(5.0)),
+    (5.0, np.bool_(True), 0.5, np.log(5.0) - 0.5),
+    (-1.0, np.bool_(False), 0.5, -np.inf),
 ]
 
 
-@pytest.mark.parametrize(("inputs", "expected"), utility_test_cases)
-def test_utility(inputs, expected):
-    aae(analytical_solution.utility(**inputs), expected)
+@pytest.mark.parametrize(
+    ("consumption", "work_dec", "delta", "expected"),
+    utility_test_cases,
+)
+def test_utility(consumption, work_dec, delta, expected):
+    util = utility(
+        consumption=consumption,
+        work_dec=work_dec,
+        delta=delta,
+    )
+    aae(util, expected)

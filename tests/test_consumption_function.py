@@ -2,182 +2,58 @@
 # ruff: noqa: FBT003
 import numpy as np
 import pytest
-from lcm_dev import analytical_solution
+from lcm_dev.analytical_solution import (
+    _consumption,
+    _generate_policy_function_vector,
+    liquidity_constrained_consumption,
+    retirees_consumption,
+    retirement_discontinuity_consumption,
+)
 from numpy.testing import assert_array_almost_equal as aaae
 
 test_cases_liquidity = [
     # Liquidity constraint binding
-    {
-        "inputs": {
-            "wealth": np.array(
-                (10, 50),
-            ),
-            "wage": 3.0,
-            "interest_rate": 0,
-            "beta": 0.95,
-            "constraint_timing": 0,
-        },
-        "expected": np.array((10, 50)),
-    },
+    (10.0, 3.0, 0.0, 0.95, 0, 10.0),
+    (50.0, 3.0, 0.0, 0.95, 0, 50.0),
     # Liquidity constraint binding in 1 period
-    {
-        "inputs": {
-            "wealth": np.array(
-                (10, 50),
-            ),
-            "wage": 3.0,
-            "interest_rate": 0,
-            "beta": 0.95,
-            "constraint_timing": 1,
-        },
-        "expected": np.array((13 / 1.95, 53 / 1.95)),
-    },
+    (10.0, 3.0, 0.0, 0.95, 1, 13 / 1.95),
+    (50.0, 3.0, 0.0, 0.95, 1, 53 / 1.95),
     # Liquidity constraint binding in 2 periods
-    {
-        "inputs": {
-            "wealth": np.array(
-                (10, 50),
-            ),
-            "wage": 3.0,
-            "interest_rate": 0,
-            "beta": 0.95,
-            "constraint_timing": 2,
-        },
-        "expected": np.array(
-            (
-                (10 + 3 * 2) / (1 + 0.95 + 0.95**2),
-                (50 + 3 * 2) / (1 + 0.95 + 0.95**2),
-            ),
-        ),
-    },
+    (10.0, 3.0, 0.0, 0.95, 2, (10 + 3 * 2) / (1 + 0.95 + 0.95**2)),
+    (50.0, 3.0, 0.0, 0.95, 2, (50 + 3 * 2) / (1 + 0.95 + 0.95**2)),
     # Liquidity constraint binding in 1 period, positive interest rate
-    {
-        "inputs": {
-            "wealth": np.array(
-                (10, 50),
-            ),
-            "wage": 3.0,
-            "interest_rate": 0.1,
-            "beta": 0.95,
-            "constraint_timing": 1,
-        },
-        "expected": np.array(((10 + 3 / 1.1) / (1.95), (50 + 3 / 1.1) / (1.95))),
-    },
+    (10.0, 3.0, 0.1, 0.95, 1, (10 + 3 / 1.1) / (1.95)),
+    (50.0, 3.0, 0.1, 0.95, 1, (50 + 3 / 1.1) / (1.95)),
 ]
 
 test_cases_retirement = [
     # Retirement this period, end of life today
-    {
-        "inputs": {
-            "wealth": np.array(
-                (10, 50),
-            ),
-            "wage": 3.0,
-            "interest_rate": 0,
-            "beta": 0.95,
-            "tau": 0,
-            "retirement_timing": 0,
-        },
-        "expected": (10, 50),
-    },
+    (10.0, 3.0, 0.0, 0.95, 0, 0, 10.0),
+    (50.0, 3.0, 0.0, 0.95, 0, 0, 50.0),
     # Retirement this period, end of life in 1 period
-    {
-        "inputs": {
-            "wealth": np.array(
-                (10, 50),
-            ),
-            "wage": 3.0,
-            "interest_rate": 0,
-            "beta": 0.95,
-            "tau": 1,
-            "retirement_timing": 0,
-        },
-        "expected": (10 / 1.95, 50 / 1.95),
-    },
+    (10.0, 3.0, 0.0, 0.95, 1, 0, 10 / 1.95),
+    (50.0, 3.0, 0.0, 0.95, 1, 0, 50 / 1.95),
     # Retirement in this period, end of life in 2 periods
-    {
-        "inputs": {
-            "wealth": np.array(
-                (10, 50),
-            ),
-            "wage": 3.0,
-            "interest_rate": 0,
-            "beta": 0.95,
-            "tau": 2,
-            "retirement_timing": 0,
-        },
-        "expected": (10 / (1.95 + 0.95**2), 50 / (1.95 + 0.95**2)),
-    },
+    (10.0, 3.0, 0.0, 0.95, 2, 0, 10 / (1.95 + 0.95**2)),
+    (50.0, 3.0, 0.0, 0.95, 2, 0, 50 / (1.95 + 0.95**2)),
     # Retirement in 1 period, end of life in 1 period
-    {
-        "inputs": {
-            "wealth": np.array(
-                (10, 50),
-            ),
-            "wage": 3.0,
-            "interest_rate": 0,
-            "beta": 0.95,
-            "tau": 1,
-            "retirement_timing": 1,
-        },
-        "expected": (13 / 1.95, 53 / 1.95),
-    },
+    (10.0, 3.0, 0.0, 0.95, 1, 1, 13 / 1.95),
+    (50.0, 3.0, 0.0, 0.95, 1, 1, 53 / 1.95),
     # Retirement in 1 period, end of life in 1 period, positive interest rate
-    {
-        "inputs": {
-            "wealth": np.array(
-                (10, 50),
-            ),
-            "wage": 3.0,
-            "interest_rate": 0.1,
-            "beta": 0.95,
-            "tau": 1,
-            "retirement_timing": 1,
-        },
-        "expected": ((10 + 3 / 1.1) / 1.95, (50 + 3 / 1.1) / 1.95),
-    },
+    (10.0, 3.0, 0.1, 0.95, 1, 1, (10 + 3 / 1.1) / 1.95),
+    (50.0, 3.0, 0.1, 0.95, 1, 1, (50 + 3 / 1.1) / 1.95),
 ]
 
 test_cases_retiree_consumption = [
     # Retiree consumption, end of life today
-    {
-        "inputs": {
-            "wealth": np.array(
-                (10, 50),
-            ),
-            "tau": 0,
-            "beta": 0.95,
-        },
-        "expected": np.array(
-            (10, 50),
-        ),
-    },
+    (10.0, 0, 0.95, 10.0),
+    (50.0, 0, 0.95, 50.0),
     # Retiree consumption, end of life in 1 period
-    {
-        "inputs": {
-            "wealth": np.array(
-                (10, 50),
-            ),
-            "tau": 1,
-            "beta": 0.95,
-        },
-        "expected": np.array(
-            (10 / 1.95, 50 / 1.95),
-        ),
-    },
+    (10.0, 1, 0.95, 10 / 1.95),
+    (50.0, 1, 0.95, 50 / 1.95),
     # Retiree consumption, end of life in 2 periods
-    {
-        "inputs": {
-            "wealth": np.array(
-                (10, 50),
-            ),
-            "tau": 2,
-            "beta": 0.95,
-        },
-        "expected": np.array(
-            (10 / (1 + 0.95 + 0.95**2), 50 / (1 + 0.95 + 0.95**2)),
-        ),
-    },
+    (10.0, 2, 0.95, 10 / (1 + 0.95 + 0.95**2)),
+    (50.0, 2, 0.95, 50 / (1 + 0.95 + 0.95**2)),
 ]
 
 test_cases_policy_func_vector = [
@@ -290,34 +166,75 @@ test_cases_consumption = [
 ]
 
 
-@pytest.mark.parametrize("test", test_cases_liquidity)
-def test_liquidity_constrained_consumption(test):
+@pytest.mark.parametrize(
+    ("wealth", "wage", "interest_rate", "beta", "constraint_timing", "expected"),
+    test_cases_liquidity,
+)
+def test_liquidity_constrained_consumption(
+    wealth,
+    wage,
+    interest_rate,
+    beta,
+    constraint_timing,
+    expected,
+):
     """Test consumption when liquidity constrained."""
+    sol = liquidity_constrained_consumption(
+        wealth=wealth,
+        wage=wage,
+        interest_rate=interest_rate,
+        beta=beta,
+        constraint_timing=constraint_timing,
+    )
     aaae(
-        analytical_solution.liquidity_constrained_consumption(**test["inputs"]),
-        test["expected"],
+        sol,
+        expected,
     )
 
 
-@pytest.mark.parametrize("test", test_cases_retirement)
-def test_retirement_discontinuity_consumption(test):
+@pytest.mark.parametrize(
+    ("wealth", "wage", "interest_rate", "beta", "tau", "retirement_timing", "expected"),
+    test_cases_retirement,
+)
+def test_retirement_discontinuity_consumption(
+    wealth,
+    wage,
+    interest_rate,
+    beta,
+    tau,
+    retirement_timing,
+    expected,
+):
     """Test consumption at retirement discontinuities."""
-    aaae(
-        analytical_solution.retirement_discontinuity_consumption(**test["inputs"]),
-        test["expected"],
+    sol = retirement_discontinuity_consumption(
+        wealth=wealth,
+        wage=wage,
+        interest_rate=interest_rate,
+        beta=beta,
+        tau=tau,
+        retirement_timing=retirement_timing,
     )
+    aaae(sol, expected)
 
 
-@pytest.mark.parametrize("test", test_cases_retiree_consumption)
-def test_retiree_consumption(test):
+@pytest.mark.parametrize(
+    ("wealth", "tau", "beta", "expected"),
+    test_cases_retiree_consumption,
+)
+def test_retiree_consumption(wealth, tau, beta, expected):
     """Test consumption for retirees."""
-    aaae(analytical_solution.retirees_consumption(**test["inputs"]), test["expected"])
+    sol = retirees_consumption(
+        wealth=wealth,
+        tau=tau,
+        beta=beta,
+    )
+    aaae(sol, expected)
 
 
 @pytest.mark.parametrize("test", test_cases_policy_func_vector)
 def test_policy_func_vector(test):
     """Test whole policy function vector."""
-    policy_vec = analytical_solution._generate_policy_function_vector(  # noqa: SLF001
+    policy_vec = _generate_policy_function_vector(
         **test["inputs"],
     )
     solution_ret = list(map(policy_vec["retired"], [10, 50]))
@@ -332,8 +249,5 @@ def test_consumption(test):
     """Test final consumption function."""
     wealth_level = np.linspace(0, 100, 12)
     expected_solution = [test["expected_func"](wealth) for wealth in wealth_level]
-    solution = [
-        analytical_solution._consumption(wealth, **test["inputs"])  # noqa: SLF001
-        for wealth in wealth_level
-    ]
+    solution = [_consumption(wealth, **test["inputs"]) for wealth in wealth_level]
     aaae(solution, expected_solution)
