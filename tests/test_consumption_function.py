@@ -140,7 +140,7 @@ test_cases_policy_func_vector = [
 test_cases_consumption = [
     {
         "inputs": {
-            "work_status": np.bool_(False),
+            "work_status": False,
             "policy_dict": {
                 "retired": lambda wealth: wealth**2,
                 "worker": lambda wealth: wealth**3,
@@ -151,7 +151,7 @@ test_cases_consumption = [
     },
     {
         "inputs": {
-            "work_status": np.bool_(True),
+            "work_status": True,
             "policy_dict": {
                 "retired": lambda wealth: wealth**2,
                 "worker": [

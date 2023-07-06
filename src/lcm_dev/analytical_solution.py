@@ -17,9 +17,7 @@ def utility(consumption, work_dec, delta):
         float: utility
 
     """
-    u = np.log(consumption) - work_dec * delta if consumption > 0 else -np.inf
-
-    return u
+    return np.log(consumption) - work_dec * delta if consumption > 0 else -np.inf
 
 
 def liquidity_constrained_consumption(
@@ -195,23 +193,23 @@ def root_function(
     return (
         utility(
             consumption=consumption_lb(wealth),
-            work_dec=np.bool_(True),
+            work_dec=True,
             delta=delta,
         )
         - utility(
             consumption=consumption_ub(wealth),
-            work_dec=np.bool_(True),
+            work_dec=True,
             delta=delta,
         )
         + beta
         * v_prime(
             wealth=(1 + interest_rate) * (wealth - consumption_lb(wealth)) + wage,
-            work_status=np.bool_(True),
+            work_status=True,
         )
         - beta
         * v_prime(
             wealth=(1 + interest_rate) * (wealth - consumption_ub(wealth)) + wage,
-            work_status=np.bool_(True),
+            work_status=True,
         )
     )
 
@@ -360,11 +358,7 @@ def _work_decision(wealth, work_status, wealth_thresholds):
 
     """
     ret_threshold = wealth_thresholds[-2]
-    return (
-        np.bool_(wealth < ret_threshold)
-        if work_status is np.bool_(True)
-        else np.bool_(False)
-    )
+    return np.bool_(wealth < ret_threshold) if work_status else False
 
 
 def _consumption(wealth, work_status, policy_dict, wt):
@@ -379,12 +373,13 @@ def _consumption(wealth, work_status, policy_dict, wt):
         float: consumption
 
     """
-    if work_status is np.bool_(False):
-        cons = policy_dict["retired"](wealth)
-
-    else:
+    if work_status:
         condlist = _evaluate_piecewise_conditions(wealth, wealth_thresholds=wt)
         cons = np.piecewise(x=wealth, condlist=condlist, funclist=policy_dict["worker"])
+
+    else:
+        cons = policy_dict["retired"](wealth)
+
     return cons
 
 
@@ -493,14 +488,7 @@ def _value_function(
     """
     if wealth == 0:
         value = -np.inf
-    elif work_status is np.bool_(False):
-        value = value_function_retirees(
-            wealth=wealth,
-            beta=beta,
-            tau=tau,
-            interest_rate=interest_rate,
-        )
-    else:
+    elif work_status:
         value = value_function_workers(
             wealth=wealth,
             beta=beta,
@@ -511,6 +499,13 @@ def _value_function(
             work_dec_func=work_dec_func,
             c_pol=c_pol,
             v_prime=v_prime,
+        )
+    else:
+        value = value_function_retirees(
+            wealth=wealth,
+            beta=beta,
+            tau=tau,
+            interest_rate=interest_rate,
         )
 
     return value
@@ -552,7 +547,7 @@ def work_dec_last_period(wealth, work_status):  # noqa: ARG001
         np.bool_: work decision
 
     """
-    return np.bool_(False)
+    return False
 
 
 def _construct_model(delta, num_periods, param_dict):
@@ -642,9 +637,9 @@ def simulate_cons_work_response(
     if period == 0:
         work_decision_function = partial(
             work_decision_function,
-            work_status=np.bool_(True),
+            work_status=True,
         )
-        consumption_function = partial(consumption_function, work_status=np.bool_(True))
+        consumption_function = partial(consumption_function, work_status=True)
         work_dec_vec = list(map(work_decision_function, wealth_levels))
         c_vec = list(map(consumption_function, wealth_levels))
         wealth_next_period = (1 + interest_rate) * (
@@ -761,8 +756,8 @@ def analytical_solution(
             for t in range(0, num_periods)
         ]
         for (worker_type, work_status) in [
-            ["worker", np.bool_(True)],
-            ["retired", np.bool_(False)],
+            ["worker", True],
+            ["retired", False],
         ]
     }
 

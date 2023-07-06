@@ -9,12 +9,12 @@ from lcm_dev.analytical_solution import (
 from numpy.testing import assert_almost_equal as aae
 
 utility_test_cases = [
-    (1.0, np.bool_(False), 0.0, 0.0),
-    (1.0, np.bool_(True), 0.0, 0.0),
-    (1.0, np.bool_(True), 0.5, -0.5),
-    (5.0, np.bool_(False), 0.5, np.log(5.0)),
-    (5.0, np.bool_(True), 0.5, np.log(5.0) - 0.5),
-    (-1.0, np.bool_(False), 0.5, -np.inf),
+    (1.0, False, 0.0, 0.0),
+    (1.0, True, 0.0, 0.0),
+    (1.0, True, 0.5, -0.5),
+    (5.0, False, 0.5, np.log(5.0)),
+    (5.0, True, 0.5, np.log(5.0) - 0.5),
+    (-1.0, False, 0.5, -np.inf),
 ]
 
 

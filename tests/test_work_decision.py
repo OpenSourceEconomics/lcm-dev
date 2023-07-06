@@ -1,17 +1,16 @@
 """Test the work decision function."""
 # ruff: noqa: FBT003
-import numpy as np
 import pytest
 from lcm_dev.analytical_solution import (
     _work_decision,
 )
 
 test_cases_work_dec = [
-    ((10, np.bool_(False), [0, 10, 20, 30]), np.bool_(False)),
-    ((40, np.bool_(False), [0, 10, 20, 30]), np.bool_(False)),
-    ((40, np.bool_(True), [0, 10, 20, 30]), np.bool_(False)),
-    ((10, np.bool_(True), [0, 10, 20, 30]), np.bool_(True)),
-    ((19, np.bool_(True), [0, 10, 20, 30]), np.bool_(True)),
+    ((10, False, [0, 10, 20, 30]), False),
+    ((40, False, [0, 10, 20, 30]), False),
+    ((40, True, [0, 10, 20, 30]), False),
+    ((10, True, [0, 10, 20, 30]), True),
+    ((19, True, [0, 10, 20, 30]), True),
 ]
 
 
