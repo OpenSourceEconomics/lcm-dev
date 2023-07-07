@@ -8,7 +8,7 @@ import pytask
 from lcm_dev.analytical_solution import compute_value_function, simulate
 from lcm_dev.config import BLD
 
-models = {
+MODELS = {
     "iskhakov_2017": {
         "beta": 0.98,
         "delta": 1.0,
@@ -25,10 +25,10 @@ models = {
     },
 }
 
-wealth_grid = np.linspace(1, 100, 10_000)
-initial_wealth_levels = np.linspace(1, 100, 20)
+WEALTH_GRID = np.linspace(1, 100, 10_000)
+INITIAL_WEALTH_LEVELS = np.linspace(1, 100, 20)
 
-for model, params in models.items():
+for model, params in MODELS.items():
 
     @pytask.mark.task(
         id=model,
@@ -43,9 +43,9 @@ for model, params in models.items():
     )
     def task_create_analytical_solution(produces, params):
         """Store analytical solution in a pickle file."""
-        values = compute_value_function(grid=wealth_grid, **params)
+        values = compute_value_function(grid=WEALTH_GRID, **params)
         consumption, work_decision = simulate(
-            initial_wealth_levels=initial_wealth_levels,
+            initial_wealth_levels=INITIAL_WEALTH_LEVELS,
             **params,
         )
         pickle.dump(
