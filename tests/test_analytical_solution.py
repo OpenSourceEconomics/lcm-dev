@@ -77,9 +77,7 @@ def value_function_last(wealth, delta):
         float
 
     """
-    consumption = wealth
-    work_dec = False
-    return utility(consumption=consumption, work_dec=work_dec, delta=delta)
+    return utility(consumption=wealth, work_dec=False, delta=delta)
 
 
 def value_function_second_to_last(wealth, worker, wage, interest_rate, beta, delta):
@@ -138,7 +136,7 @@ def create_solution(wealth_grid, simulation_grid, params):
     """
     v_worker = np.zeros((2, len(wealth_grid)))
     v_retiree = np.zeros((2, len(wealth_grid)))
-    cons = np.zeros((2, len(simulation_grid)))
+    consumption = np.zeros((2, len(simulation_grid)))
     work_dec = np.zeros((2, len(simulation_grid)))
 
     for i, wealth in enumerate(wealth_grid):
@@ -159,7 +157,7 @@ def create_solution(wealth_grid, simulation_grid, params):
         v_retiree[1, i] = np.log(wealth)
 
     for i, wealth in enumerate(simulation_grid):
-        cons[0, i] = consumption_second_to_last(
+        consumption[0, i] = consumption_second_to_last(
             wealth=wealth,
             **params,
         )
@@ -167,11 +165,11 @@ def create_solution(wealth_grid, simulation_grid, params):
             wealth=wealth,
             **params,
         )
-        wealth_next_period = (wealth - cons[0, i]) * (
+        wealth_next_period = (wealth - consumption[0, i]) * (
             1 + params["interest_rate"]
         ) + params["wage"] * work_dec[0, i]
 
-        cons[1, i] = wealth_next_period
+        consumption[1, i] = wealth_next_period
         work_dec[1, i] = False
 
     v = {
@@ -179,7 +177,7 @@ def create_solution(wealth_grid, simulation_grid, params):
         "retired": v_retiree,
     }
 
-    return v, cons, work_dec
+    return v, consumption, work_dec
 
 
 @pytest.fixture()

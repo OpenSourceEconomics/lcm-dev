@@ -374,12 +374,16 @@ def _consumption(wealth, work_status, policy_dict, wt):
     """
     if work_status:
         condlist = _evaluate_piecewise_conditions(wealth, wealth_thresholds=wt)
-        cons = np.piecewise(x=wealth, condlist=condlist, funclist=policy_dict["worker"])
+        consumption = np.piecewise(
+            x=wealth,
+            condlist=condlist,
+            funclist=policy_dict["worker"],
+        )
 
     else:
-        cons = policy_dict["retired"](wealth)
+        consumption = policy_dict["retired"](wealth)
 
-    return cons
+    return consumption
 
 
 def value_function_retirees(wealth, beta, tau, interest_rate):
@@ -438,18 +442,18 @@ def value_function_workers(
         wealth=wealth,
         work_status=work_status,
     )
-    cons = c_pol(
+    consumption = c_pol(
         wealth=wealth,
         work_status=work_status,
     )
 
     inst_util = utility(
-        consumption=cons,
+        consumption=consumption,
         work_decision=work_decision,
         delta=delta,
     )
     cont_val = v_prime(
-        wealth=(1 + interest_rate) * (wealth - cons) + wage * work_decision,
+        wealth=(1 + interest_rate) * (wealth - consumption) + wage * work_decision,
         work_status=work_decision,
     )
 
