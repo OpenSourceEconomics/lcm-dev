@@ -191,9 +191,15 @@ def params():
     }
 
 
-def test_analytical_solution(params):
+def test_analytical_solution():
     """Test analytical solution against simple two-period model."""
     grid = np.linspace(1, 100, 12)
+    params = {
+        "wage": 20.0,
+        "interest_rate": 0.1,
+        "beta": 0.98,
+        "delta": 1.0,
+    }
 
     values = compute_value_function(
         grid=grid,
