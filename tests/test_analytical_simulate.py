@@ -69,44 +69,22 @@ test_cases_simulate_cons_work_resp = [
     },
 ]
 
-test_cases_simulate = [
-    {
-        "inputs": {
-            "c_func_vec": [
-                lambda wealth, work_status: wealth,  # noqa: ARG005
-                lambda wealth, work_status: wealth**2,  # noqa: ARG005
-            ],
-            "work_dec_func_vec": [
-                lambda wealth, work_status: True,  # noqa: ARG005
-                lambda wealth, work_status: False,  # noqa: ARG005
-            ],
-            "wealth_levels": np.linspace(1, 100, 12),
-            "num_periods": 2,
-            "wage": 2.0,
-            "interest_rate": 0.0,
-        },
-        "expected": {
-            "consumption": np.array(
-                [
-                    np.linspace(1, 100, 12),
-                    (np.ones(12, dtype=float) + 1) ** 2,
-                ],
-            ),
-            "work_dec_vec": np.array(
-                [
-                    np.ones(12, dtype=bool),
-                    np.zeros(12, dtype=bool),
-                ],
-            ),
-        },
-    },
-]
+test_cases_simulate = (
+    (
+        1.0,
+        1.0,
+        np.linspace(1, 100, 12),
+        1,
+        2.0,
+        0.0,
+        np.linspace(1, 100, 12),
+        np.repeat(False, 12),  # noqa: FBT003
+    ),
+)
 
 test_cases_analytical_solution = [
     {
         "inputs": {
-            "wealth_grid": np.linspace(1, 100, 12),
-            "simulation_grid": np.linspace(1, 100, 12),
             "beta": 0.9,
             "wage": 1.0,
             "interest_rate": 0.0,
@@ -114,26 +92,23 @@ test_cases_analytical_solution = [
             "num_periods": 1,
         },
         "expected": {
-            "v": {
-                "worker": [np.log(np.linspace(1, 100, 12))],
-                "retired": [np.log(np.linspace(1, 100, 12))],
-            },
-            "c": [np.linspace(1, 100, 12)],
-            "work_dec_vec": [np.zeros(12, dtype=bool)],
+            "values": np.log(np.linspace(1, 100, 12)),
+            "consumption": np.linspace(1, 100, 12),
+            "work_decision": np.repeat(False, 12),  # noqa: FBT003
         },
+        "wealth_grid": np.linspace(1, 100, 12),
     },
 ]
 
 test_cases_analytical_solution_work_decision = [
     {
         "kwargs": {
-            "wealth_grid": np.linspace(1, 100, 12),
-            "simulation_grid": np.linspace(1, 100, 12),
             "beta": 0.95,
+            "delta": 1.0,
+            "initial_wealth_levels": np.linspace(1, 100, 12),
+            "num_periods": 3,
             "wage": 10.0,
             "interest_rate": 0.0,
-            "delta": 1.0,
-            "num_periods": 3,
         },
         "expected": 2,
     },
@@ -153,30 +128,64 @@ def test_simulate_cons_work_resp(test_case):
     aaae(wealth_next_period, expected["wealth_next_period"])
 
 
-@pytest.mark.parametrize("test_case", test_cases_simulate)
-def test_simulate(test_case):
+@pytest.mark.parametrize(
+    (
+        "beta",
+        "delta",
+        "initial_wealth_levels",
+        "num_periods",
+        "wage",
+        "interest_rate",
+        "expected_consumption",
+        "expected_work_decision",
+    ),
+    test_cases_simulate,
+)
+def test_simulate(
+    beta,
+    delta,
+    initial_wealth_levels,
+    num_periods,
+    wage,
+    interest_rate,
+    expected_consumption,
+    expected_work_decision,
+):
     """Test the simulate function."""
-    expected = test_case["expected"]
-    inputs = test_case["inputs"]
-    cons, work_dec = simulate(**inputs)
-    aaae(cons, expected["consumption"])
-    aaae(work_dec, expected["work_dec_vec"])
+    consumption, work_decision = simulate(
+        beta=beta,
+        delta=delta,
+        initial_wealth_levels=initial_wealth_levels,
+        num_periods=num_periods,
+        wage=wage,
+        interest_rate=interest_rate,
+    )
+    aaae(consumption[0], expected_consumption)
+    aaae(work_decision[0], expected_work_decision)
 
 
 @pytest.mark.parametrize("test_case", test_cases_analytical_solution)
 def test_analytical_solution(test_case):
-    """Test the simulate function."""
+    """Test the analytical solution function."""
+    grid = test_case["wealth_grid"]
     expected = test_case["expected"]
     inputs = test_case["inputs"]
-    v, cons, work_dec = analytical_solution(**inputs)
-    aaae(v["worker"], expected["v"]["worker"])
-    aaae(v["retired"], expected["v"]["retired"])
-    aaae(cons, expected["c"])
-    aaae(work_dec, expected["work_dec_vec"])
+    value_function, consumption_function, work_decision_function = analytical_solution(
+        **inputs,
+    )
+    values_worker = [value_function[0](x, work_status=True) for x in grid]
+    values_retired = [value_function[0](x, work_status=False) for x in grid]
+    consumption = [consumption_function[0](x, work_status=True) for x in grid]
+    work_decision = [work_decision_function[0](x, work_status=True) for x in grid]
+
+    aaae(expected["values"], values_worker)
+    aaae(expected["values"], values_retired)
+    aaae(expected["consumption"], consumption)
+    aaae(expected["work_decision"], work_decision)
 
 
 @pytest.mark.parametrize("test_case", test_cases_analytical_solution_work_decision)
-def test_analytical_solution_work_dec(test_case):
+def test_simulate_work_dec(test_case):
     """Test that work decision is not False in all periods for lowest wealth level."""
-    v, cons, work_dec = analytical_solution(**test_case["kwargs"])
-    assert np.sum(work_dec.T[0]) == test_case["expected"]
+    _, work_decision = simulate(**test_case["kwargs"])
+    assert np.sum(work_decision.T[0]) == test_case["expected"]

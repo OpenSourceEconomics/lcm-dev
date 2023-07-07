@@ -664,9 +664,9 @@ def simulate_cons_work_response(
 
 
 def simulate(
-    c_func_vec,
-    work_dec_func_vec,
-    wealth_levels,
+    beta,
+    delta,
+    initial_wealth_levels,
     num_periods,
     wage,
     interest_rate,
@@ -674,25 +674,32 @@ def simulate(
     """Simulate consumption and retirement decision for different initial wealth levels.
 
     Args:
-        c_func_vec (list): consumption functions
-        work_dec_func_vec (list): work decision functions
-        wealth_levels (list): initial wealth levels
+        beta (float): discount factor
+        delta (float): disutility of work
+        initial_wealth_levels (list): initial wealth levels
         num_periods (int): length of life
         wage (float): labor income
         interest_rate (float): interest rate
     Returns:
-        numpy array: consumption levels
+        numpy array: simulated consumption levels
+        numpy array: simulated work decision
 
     """
-    grid_size = len(wealth_levels)
+    _, consumption_function, work_decision_function = analytical_solution(
+        beta=beta,
+        wage=wage,
+        interest_rate=interest_rate,
+        delta=delta,
+        num_periods=num_periods,
+    )
+
+    grid_size = len(initial_wealth_levels)
     c_mat = np.zeros((num_periods, grid_size))
     work_dec_mat = np.zeros((num_periods, grid_size), dtype=np.bool_)
     wealth_mat = np.zeros((num_periods + 1, grid_size))
-    wealth_mat[0, :] = wealth_levels  # initial wealth levels
+    wealth_mat[0, :] = initial_wealth_levels  # initial wealth levels
 
     for period in range(num_periods):
-        consumption_function = c_func_vec[period]
-        work_decision_function = work_dec_func_vec[period]
         (
             c_mat[period, :],
             work_dec_mat[period, :],
@@ -702,8 +709,8 @@ def simulate(
             wealth_levels=wealth_mat[period, :],
             wage=wage,
             interest_rate=interest_rate,
-            work_decision_function=work_decision_function,
-            consumption_function=consumption_function,
+            work_decision_function=work_decision_function[period],
+            consumption_function=consumption_function[period],
             work_status_last_period=work_dec_mat[period - 1, :],
         )
 
@@ -711,28 +718,24 @@ def simulate(
 
 
 def analytical_solution(
-    wealth_grid,
-    simulation_grid,
     beta,
     wage,
     interest_rate,
     delta,
     num_periods,
 ):
-    """Compute value function analytically on a grid.
+    """Construct value, consumption, and work decision function analytically.
 
     Args:
-        wealth_grid (list): grid of wealth levels
-        simulation_grid (list): grid of wealth levels for simulation
         beta (float): discount factor
         wage (float): labor income
         interest_rate (float): interest rate
         delta (float): disutility of work
         num_periods (int): length of life
     Returns:
-        list: values of value function
-        list: simulated consumption levels
-        list: simulated work decisions
+        list: value functions
+        list: consumption policy functions
+        list: work decision functions
 
     """
     # Unpack parameters
@@ -741,7 +744,6 @@ def analytical_solution(
         "beta": float(beta),
         "wage": float(wage),
         "interest_rate": float(interest_rate),
-        "tau": None,
     }
 
     v_fct, c_pol, work_dec = _construct_model(
@@ -750,9 +752,34 @@ def analytical_solution(
         param_dict=param_dict,
     )
 
-    v = {
+    return v_fct, c_pol, work_dec
+
+
+def compute_value_function(grid, beta, wage, interest_rate, delta, num_periods):
+    """Compute value function analytically on a grid.
+
+    Args:
+        grid (list): grid of wealth levels
+        beta (float): discount factor
+        wage (float): labor income
+        interest_rate (float): interest rate
+        delta (float): disutility of work
+        num_periods (int): length of life
+    Returns:
+        list: values of value function
+
+    """
+    value_function, _, _ = analytical_solution(
+        beta,
+        wage,
+        interest_rate,
+        delta,
+        num_periods,
+    )
+
+    values = {
         worker_type: [
-            list(map(v_fct[t], wealth_grid, [work_status] * len(wealth_grid)))
+            list(map(value_function[t], grid, np.repeat(work_status, len(grid))))
             for t in range(0, num_periods)
         ]
         for (worker_type, work_status) in [
@@ -761,13 +788,4 @@ def analytical_solution(
         ]
     }
 
-    c_vec, work_dec = simulate(
-        c_func_vec=c_pol,
-        work_dec_func_vec=work_dec,
-        wealth_levels=simulation_grid,
-        num_periods=num_periods,
-        interest_rate=interest_rate,
-        wage=wage,
-    )
-
-    return v, c_vec, work_dec
+    return values

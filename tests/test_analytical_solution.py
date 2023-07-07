@@ -3,7 +3,8 @@
 import numpy as np
 import pytest
 from lcm_dev.analytical_solution import (
-    analytical_solution,
+    compute_value_function,
+    simulate,
 )
 from numpy.testing import assert_array_almost_equal as aaae
 
@@ -195,21 +196,26 @@ def params():
 
 def test_analytical_solution(params):
     """Test analytical solution against simple two-period model."""
-    wealth_grid = np.linspace(1, 100, 12)
-    simulation_grid = np.linspace(1, 100, 12)
-    v, cons, work_dec = analytical_solution(
-        wealth_grid=wealth_grid,
-        simulation_grid=simulation_grid,
+    grid = np.linspace(1, 100, 12)
+
+    values = compute_value_function(
+        grid=grid,
         num_periods=2,
         **params,
     )
 
+    consumption, work_decision = simulate(
+        num_periods=2,
+        initial_wealth_levels=grid,
+        **params,
+    )
+
     v_exp, cons_exp, work_dec_exp = create_solution(
-        wealth_grid=wealth_grid,
-        simulation_grid=simulation_grid,
+        wealth_grid=grid,
+        simulation_grid=grid,
         params=params,
     )
-    aaae(v["worker"], v_exp["worker"])
-    aaae(v["retired"], v_exp["retired"])
-    aaae(cons, cons_exp)
-    aaae(work_dec, work_dec_exp)
+    aaae(values["worker"], v_exp["worker"])
+    aaae(values["retired"], v_exp["retired"])
+    aaae(consumption, cons_exp)
+    aaae(work_decision, work_dec_exp)

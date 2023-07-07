@@ -5,7 +5,7 @@ import pickle
 import numpy as np
 import pytask
 
-from lcm_dev.analytical_solution import analytical_solution
+from lcm_dev.analytical_solution import compute_value_function, simulate
 from lcm_dev.config import BLD
 
 models = {
@@ -23,17 +23,10 @@ models = {
         "interest_rate": 0.0,
         "num_periods": 3,
     },
-    "high_wage": {
-        "beta": 0.98,
-        "delta": 1.0,
-        "wage": float(100),
-        "interest_rate": 0.0,
-        "num_periods": 5,
-    },
 }
 
 wealth_grid = np.linspace(1, 100, 10_000)
-simulation_grid = np.linspace(1, 100, 20)
+initial_wealth_levels = np.linspace(1, 100, 20)
 
 for model, params in models.items():
 
@@ -41,29 +34,29 @@ for model, params in models.items():
         id=model,
         kwargs={
             "produces": {
-                "result_v": BLD / "analytical_solution" / f"{model}_v.pkl",
-                "result_c": BLD / "analytical_solution" / f"{model}_c.pkl",
-                "result_work_dec": BLD / "analytical_solution" / f"{model}_work.pkl",
+                "values": BLD / "analytical_solution" / f"{model}_v.pkl",
+                "consumption": BLD / "analytical_solution" / f"{model}_c.pkl",
+                "work_decision": BLD / "analytical_solution" / f"{model}_work.pkl",
             },
             "params": params,
         },
     )
     def task_create_analytical_solution(produces, params):
         """Store analytical solution in a pickle file."""
-        result_v, result_c, result_work_dec = analytical_solution(
-            wealth_grid=wealth_grid,
-            simulation_grid=simulation_grid,
+        values = compute_value_function(grid=wealth_grid, **params)
+        consumption, work_decision = simulate(
+            initial_wealth_levels=initial_wealth_levels,
             **params,
         )
         pickle.dump(
-            result_v,
-            produces["result_v"].open("wb"),
+            values,
+            produces["values"].open("wb"),
         )
         pickle.dump(
-            result_c,
-            produces["result_c"].open("wb"),
+            consumption,
+            produces["consumption"].open("wb"),
         )
         pickle.dump(
-            result_work_dec,
-            produces["result_work_dec"].open("wb"),
+            work_decision,
+            produces["work_decision"].open("wb"),
         )
