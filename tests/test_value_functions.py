@@ -41,7 +41,7 @@ TEST_CASES_VALUES_RETIREES = [
 TEST_CASES_VALUES_WORKERS = [
     # Value function without continuation value
     {
-        "inputs": {
+        "kwargs": {
             "wealth": 10.0,
             "beta": 1.0,
             "delta": 0.1,
@@ -56,7 +56,7 @@ TEST_CASES_VALUES_WORKERS = [
     },
     # Value function with continuation value
     {
-        "inputs": {
+        "kwargs": {
             "wealth": 10.0,
             "beta": 0.95,
             "delta": 0.1,
@@ -71,7 +71,7 @@ TEST_CASES_VALUES_WORKERS = [
     },
     # Value function with continuation value and nontrivial consumption
     {
-        "inputs": {
+        "kwargs": {
             "wealth": 10.0,
             "beta": 0.95,
             "delta": 0.1,
@@ -89,7 +89,7 @@ TEST_CASES_VALUES_WORKERS = [
 TEST_CASES_VALUE_FUNC = [
     # Value function retirees
     {
-        "inputs": {
+        "kwargs": {
             "wealth": 10.0,
             "work_status": False,
             "work_dec_func": None,
@@ -107,7 +107,7 @@ TEST_CASES_VALUE_FUNC = [
     },
     # Value function workers
     {
-        "inputs": {
+        "kwargs": {
             "wealth": 10.0,
             "beta": 0.95,
             "delta": 0.1,
@@ -133,7 +133,7 @@ TEST_CASES_VALUE_FUNC_LAST_PERIOD = [
 TEST_CASES_CONSTRUCT_MODEL = [
     {
         "wealth": 10,
-        "inputs": {
+        "kwargs": {
             "delta": -1,
             "n_periods": 1,
             "beta": -1,
@@ -144,7 +144,7 @@ TEST_CASES_CONSTRUCT_MODEL = [
     },
     {
         "wealth": 10.0,
-        "inputs": {
+        "kwargs": {
             "delta": 0.1,
             "n_periods": 2,
             "beta": 0.95,
@@ -185,14 +185,14 @@ def test_value_func_retirees(wealth, beta, tau, interest_rate, expected):
 
 @pytest.mark.parametrize("test_case", TEST_CASES_VALUES_WORKERS)
 def test_value_func_workers(test_case):
-    solution = value_function_workers(**test_case["inputs"])
+    solution = value_function_workers(**test_case["kwargs"])
     aaae(test_case["expected"], solution)
 
 
 @pytest.mark.parametrize("test_case", TEST_CASES_VALUE_FUNC)
 def test_value_func(test_case):
     solution = _value_function(
-        **test_case["inputs"],
+        **test_case["kwargs"],
     )
     aaae(test_case["expected"], solution)
 
@@ -217,7 +217,7 @@ def test_construct_model(test_case):
 
     """
     value_functions, consumption_function, work_decision_functions = _construct_model(
-        **test_case["inputs"],
+        **test_case["kwargs"],
     )
     wealth = test_case["wealth"]
 

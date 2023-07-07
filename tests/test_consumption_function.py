@@ -59,7 +59,7 @@ TEST_CASES_RETIREE_CONSUMPTION = [
 TEST_CASES_POLICY_FUNC_VECTOR = [
     # Consumption policies, end of life today
     {
-        "inputs": {
+        "kwargs": {
             "wage": 3.0,
             "interest_rate": 0,
             "beta": 0.95,
@@ -78,7 +78,7 @@ TEST_CASES_POLICY_FUNC_VECTOR = [
     },
     # Consumption policies, end of life next period
     {
-        "inputs": {
+        "kwargs": {
             "wage": 3.0,
             "interest_rate": 0,
             "beta": 0.95,
@@ -103,7 +103,7 @@ TEST_CASES_POLICY_FUNC_VECTOR = [
     },
     # Consumption policies, end of life in 2 periods
     {
-        "inputs": {
+        "kwargs": {
             "wage": 3.0,
             "interest_rate": 0,
             "beta": 0.95,
@@ -139,7 +139,7 @@ TEST_CASES_POLICY_FUNC_VECTOR = [
 
 TEST_CASES_CONSUMPTION = [
     {
-        "inputs": {
+        "kwargs": {
             "work_status": False,
             "policy_dict": {
                 "retired": lambda wealth: wealth**2,
@@ -150,7 +150,7 @@ TEST_CASES_CONSUMPTION = [
         "expected_func": lambda wealth: wealth**2,
     },
     {
-        "inputs": {
+        "kwargs": {
             "work_status": True,
             "policy_dict": {
                 "retired": lambda wealth: wealth**2,
@@ -235,7 +235,7 @@ def test_retiree_consumption(wealth, tau, beta, expected):
 def test_policy_func_vector(test):
     """Test whole policy function vector."""
     policy_vec = _generate_policy_function_vector(
-        **test["inputs"],
+        **test["kwargs"],
     )
     solution_ret = list(map(policy_vec["retired"], [10, 50]))
     solution_wrk = [list(map(func, [10, 50])) for func in policy_vec["worker"]]
@@ -249,5 +249,5 @@ def test_consumption(test):
     """Test final consumption function."""
     wealth_level = np.linspace(0, 100, 12)
     expected_solution = [test["expected_func"](wealth) for wealth in wealth_level]
-    solution = [_consumption(wealth, **test["inputs"]) for wealth in wealth_level]
+    solution = [_consumption(wealth, **test["kwargs"]) for wealth in wealth_level]
     aaae(solution, expected_solution)

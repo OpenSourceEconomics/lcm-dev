@@ -13,7 +13,7 @@ from numpy.testing import assert_array_almost_equal as aaae
 TEST_CASES_SIMULATE_CONS_WORK_RESPONSE = [
     # First period
     {
-        "inputs": {
+        "kwargs": {
             "period": 0,
             "wealth_levels": np.linspace(1, 100, 12),
             "wage": 1.0,
@@ -30,7 +30,7 @@ TEST_CASES_SIMULATE_CONS_WORK_RESPONSE = [
     },
     # Second period
     {
-        "inputs": {
+        "kwargs": {
             "period": 1,
             "wealth_levels": np.linspace(1, 100, 12),
             "wage": 1.0,
@@ -47,7 +47,7 @@ TEST_CASES_SIMULATE_CONS_WORK_RESPONSE = [
     },
     # Second period, nontrivial consumption and work function
     {
-        "inputs": {
+        "kwargs": {
             "period": 1,
             "wealth_levels": np.linspace(1, 100, 12),
             "wage": 2.0,
@@ -60,7 +60,7 @@ TEST_CASES_SIMULATE_CONS_WORK_RESPONSE = [
         },
         "expected": {
             "consumption": np.linspace(1, 100, 12) ** 0.5,
-            "work_decision": np.repeat(True, 6) + np.repeat(False, 6),
+            "work_decision": [True] * 6 + [False] * 6,
             "wealth_next_period": (
                 np.linspace(1, 100, 12) - np.linspace(1, 100, 12) ** 0.5
             )
@@ -102,9 +102,9 @@ TEST_CASES_WORK_DECISION = [
 def test_simulate_cons_work_resp(test_case):
     """Test the simulate_cons_work_response function."""
     expected = test_case["expected"]
-    inputs = test_case["inputs"]
+    kwargs = test_case["kwargs"]
     c, work_decision, wealth_next_period = simulate_cons_work_response(
-        **inputs,
+        **kwargs,
     )
     aaae(c, expected["consumption"])
     aaae(work_decision, expected["work_decision"])

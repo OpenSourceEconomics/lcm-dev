@@ -14,7 +14,7 @@ TEST_CASES_WORK_DEC = [
 ]
 
 
-@pytest.mark.parametrize(("inputs", "expected"), TEST_CASES_WORK_DEC)
-def test_evaluate_piecewise_conditions(inputs, expected):
+@pytest.mark.parametrize(("kwargs", "expected"), TEST_CASES_WORK_DEC)
+def test_evaluate_piecewise_conditions(kwargs, expected):
     """Test the piecewise conditions function."""
-    assert _work_decision(*inputs) == expected
+    assert _work_decision(*kwargs) == expected

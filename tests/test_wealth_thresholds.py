@@ -38,7 +38,7 @@ TEST_CASES_RET_THRESHOLD = [
 TEST_CASES_ROOT_FUNCTION = [
     # Value of root function without v_prime
     {
-        "inputs": {
+        "kwargs": {
             "wealth": 10,
             "consumption_lb": lambda x: 10,  # noqa: ARG005
             "consumption_ub": lambda x: 20,  # noqa: ARG005
@@ -52,7 +52,7 @@ TEST_CASES_ROOT_FUNCTION = [
     },
     # Value of root function with non-trivial v_prime
     {
-        "inputs": {
+        "kwargs": {
             "wealth": 50,
             "consumption_lb": lambda x: 10,  # noqa: ARG005
             "consumption_ub": lambda x: 20,  # noqa: ARG005
@@ -71,7 +71,7 @@ TEST_CASES_ROOT_FUNCTION = [
 TEST_CASES_WEALTH_THRESHOLD_KINKS_DISCS = [
     # Test root finding for trivial value function
     {
-        "inputs": {
+        "kwargs": {
             "v_prime": lambda wealth, work_status: 0,  # noqa: ARG005
             "wage": 3.0,
             "interest_rate": 0,
@@ -90,7 +90,7 @@ TEST_CASES_WEALTH_THRESHOLD_KINKS_DISCS = [
     },
     # Test root finding for non-trivial value function
     {
-        "inputs": {
+        "kwargs": {
             "v_prime": lambda wealth, work_status: wealth,  # noqa: ARG005
             "wage": 0.0,
             "interest_rate": 0,
@@ -112,7 +112,7 @@ TEST_CASES_WEALTH_THRESHOLD_KINKS_DISCS = [
 TEST_CASES_WEALTH_THRESHOLD = [
     # Check analytical calculation of thresholds
     {
-        "inputs": {
+        "kwargs": {
             "v_prime": None,
             "wage": 3.0,
             "interest_rate": 0,
@@ -133,7 +133,7 @@ TEST_CASES_WEALTH_THRESHOLD = [
     },
     # Check threshold calculation via root finding
     {
-        "inputs": {
+        "kwargs": {
             "v_prime": lambda wealth, work_status: wealth,  # noqa: ARG005
             "wage": 0.0,
             "interest_rate": 0,
@@ -188,7 +188,7 @@ def test_retirement_threshold(wage, interest_rate, beta, delta, tau, expected):
 @pytest.mark.parametrize("test", TEST_CASES_ROOT_FUNCTION)
 def test_root_fct(test):
     """Test the root function."""
-    sol_root_fct = root_function(**test["inputs"])
+    sol_root_fct = root_function(**test["kwargs"])
     aae(sol_root_fct, test["expected"])
 
 
@@ -196,7 +196,7 @@ def test_root_fct(test):
 def test_wealth_thresholds_kinks_discs(test):
     """Test the wealth thresholds, kinks and discontinuities function."""
     aae(
-        wealth_thresholds_kinks_discs(**test["inputs"]),
+        wealth_thresholds_kinks_discs(**test["kwargs"]),
         test["expected"],
     )
 
@@ -204,7 +204,7 @@ def test_wealth_thresholds_kinks_discs(test):
 @pytest.mark.parametrize("test", TEST_CASES_WEALTH_THRESHOLD)
 def test_compute_wealth_thresholds_length(test):
     """Test the wealth thresholds function."""
-    wt = _compute_wealth_tresholds(**test["inputs"])
+    wt = _compute_wealth_tresholds(**test["kwargs"])
     assert len(wt) == test["expected"]["len_array"]
     aae(wt, test["expected"]["wealth_thresholds"])
 
