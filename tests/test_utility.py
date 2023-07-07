@@ -1,5 +1,4 @@
 """Test the utility function of the analytical solution."""
-# ruff: noqa: FBT003
 
 import numpy as np
 import pytest

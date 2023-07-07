@@ -1,5 +1,4 @@
 """Implementation of analytical solution by Iskhakov et al (2017)."""
-# ruff: noqa: FBT003
 from functools import partial
 
 import numpy as np

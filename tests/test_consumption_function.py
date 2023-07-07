@@ -1,5 +1,4 @@
 """Test the consumptions functions of the analytical solution."""
-# ruff: noqa: FBT003
 import numpy as np
 import pytest
 from lcm_dev.analytical_solution import (

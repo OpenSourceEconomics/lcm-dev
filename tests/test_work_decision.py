@@ -1,5 +1,4 @@
 """Test the work decision function."""
-# ruff: noqa: FBT003
 import pytest
 from lcm_dev.analytical_solution import (
     _work_decision,

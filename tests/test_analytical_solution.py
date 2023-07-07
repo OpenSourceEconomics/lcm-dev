@@ -1,5 +1,4 @@
 """Compare results of analytical solution with a hard-coded two period model."""
-# ruff: noqa: FBT003
 import numpy as np
 import pytest
 from lcm_dev.analytical_solution import (
