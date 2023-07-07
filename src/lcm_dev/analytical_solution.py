@@ -189,28 +189,25 @@ def root_function(
         float: root function value
 
     """
-    return (
-        utility(
-            consumption=consumption_lb(wealth),
-            work_decision=True,
-            delta=delta,
-        )
-        - utility(
-            consumption=consumption_ub(wealth),
-            work_decision=True,
-            delta=delta,
-        )
-        + beta
-        * v_prime(
-            wealth=(1 + interest_rate) * (wealth - consumption_lb(wealth)) + wage,
-            work_status=True,
-        )
-        - beta
-        * v_prime(
-            wealth=(1 + interest_rate) * (wealth - consumption_ub(wealth)) + wage,
-            work_status=True,
-        )
+    value_early_retirement = utility(
+        consumption=consumption_lb(wealth),
+        work_decision=True,
+        delta=delta,
+    ) + beta * v_prime(
+        wealth=(1 + interest_rate) * (wealth - consumption_lb(wealth)) + wage,
+        work_status=True,
     )
+
+    value_late_retirement = utility(
+        consumption=consumption_ub(wealth),
+        work_decision=True,
+        delta=delta,
+    ) + beta * v_prime(
+        wealth=(1 + interest_rate) * (wealth - consumption_ub(wealth)) + wage,
+        work_status=True,
+    )
+
+    return value_early_retirement - value_late_retirement
 
 
 def wealth_thresholds_kinks_discs(
