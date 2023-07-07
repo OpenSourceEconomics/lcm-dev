@@ -140,7 +140,7 @@ def _generate_policy_function_vector(wage, interest_rate, beta, tau):
     return {"worker": policy_vec_worker, "retired": policy_retiree}
 
 
-def retirement_threshold(wage, interest_rate, beta, delta, tau):
+def compute_retirement_threshold(wage, interest_rate, beta, delta, tau):
     """Compute retirement threshold.
 
     Args:
@@ -154,9 +154,11 @@ def retirement_threshold(wage, interest_rate, beta, delta, tau):
 
     """
     k = delta * np.sum([beta**j for j in range(0, tau + 1)]) ** (-1)
-    ret_threshold = ((wage / (1 + interest_rate)) * np.exp(-k)) / (1 - np.exp(-k))
+    retirement_threshold = ((wage / (1 + interest_rate)) * np.exp(-k)) / (
+        1 - np.exp(-k)
+    )
 
-    return ret_threshold
+    return retirement_threshold
 
 
 def root_function(
@@ -218,7 +220,7 @@ def wealth_thresholds_kinks_discs(
     delta,
     bracket,
     consumption_policy,
-    ret_threshold,
+    retirement_threshold,
     wealth_thresholds,
 ):
     """Compute wealth treshold for piecewise consumption function.
@@ -231,7 +233,7 @@ def wealth_thresholds_kinks_discs(
         delta (float): disutility of work
         bracket (int): current bracket to be calculated
         consumption_policy (list): consumption policy vector
-        ret_threshold (float): retirement threshold
+        retirement_threshold (float): retirement threshold
         wealth_thresholds (list): wealth thresholds up to `bracket`
 
     Returns:
@@ -255,7 +257,7 @@ def wealth_thresholds_kinks_discs(
     sol = root_scalar(
         partialed_root_fct,
         method="brentq",
-        bracket=[wealth_thresholds[bracket + 1], ret_threshold],
+        bracket=[wealth_thresholds[bracket + 1], retirement_threshold],
         xtol=1e-10,
         rtol=1e-10,
         maxiter=1000,
@@ -292,7 +294,7 @@ def _compute_wealth_tresholds(
     wealth_thresholds = [-np.inf, wage / ((1 + interest_rate) * beta)]
 
     # Retirement threshold
-    ret_threshold = retirement_threshold(
+    retirement_threshold = compute_retirement_threshold(
         wage=wage,
         interest_rate=interest_rate,
         beta=beta,
@@ -311,13 +313,13 @@ def _compute_wealth_tresholds(
                 delta=delta,
                 bracket=bracket,
                 consumption_policy=consumption_policy,
-                ret_threshold=ret_threshold,
+                retirement_threshold=retirement_threshold,
                 wealth_thresholds=wealth_thresholds,
             ),
         )
 
     # Add retirement threshold
-    wealth_thresholds.append(ret_threshold)
+    wealth_thresholds.append(retirement_threshold)
 
     # Add upper bound
     wealth_thresholds.append(np.inf)
@@ -353,8 +355,8 @@ def _work_decision(wealth, work_status, wealth_thresholds):
         bool: work decision
 
     """
-    ret_threshold = wealth_thresholds[-2]
-    return wealth < ret_threshold if work_status else False
+    retirement_threshold = wealth_thresholds[-2]
+    return wealth < retirement_threshold if work_status else False
 
 
 def _consumption(wealth, work_status, policy_dict, wt):

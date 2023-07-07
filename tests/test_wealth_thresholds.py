@@ -5,7 +5,7 @@ import pytest
 from lcm_dev.analytical_solution import (
     _compute_wealth_tresholds,
     _evaluate_piecewise_conditions,
-    retirement_threshold,
+    compute_retirement_threshold,
     root_function,
     wealth_thresholds_kinks_discs,
 )
@@ -83,7 +83,7 @@ TEST_CASES_WEALTH_THRESHOLD_KINKS_DISCS = [
                 lambda wealth: wealth,
                 lambda wealth: np.exp(0),  # noqa: ARG005
             ],
-            "ret_threshold": 10,
+            "retirement_threshold": 10,
             "wealth_thresholds": [-10, -10],
         },
         "expected": 1.0,
@@ -102,7 +102,7 @@ TEST_CASES_WEALTH_THRESHOLD_KINKS_DISCS = [
                 lambda wealth: wealth + 1,
                 lambda wealth: -wealth + 1,
             ],
-            "ret_threshold": 10,
+            "retirement_threshold": 10,
             "wealth_thresholds": [None, -10],
         },
         "expected": 0.0,
@@ -175,7 +175,7 @@ TEST_CASES_PIECEWISE_CONDITIONS = [
 )
 def test_retirement_threshold(wage, interest_rate, beta, delta, tau, expected):
     """Test the retirement threshold function."""
-    retirement_threshold_solution = retirement_threshold(
+    retirement_threshold_solution = compute_retirement_threshold(
         wage=wage,
         interest_rate=interest_rate,
         beta=beta,
