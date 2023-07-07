@@ -14,14 +14,14 @@ models = {
         "delta": 1.0,
         "wage": float(20),
         "interest_rate": 0.0,
-        "num_periods": 5,
+        "n_periods": 5,
     },
     "low_delta": {
         "beta": 0.98,
         "delta": 0.1,
         "wage": float(20),
         "interest_rate": 0.0,
-        "num_periods": 3,
+        "n_periods": 3,
     },
 }
 

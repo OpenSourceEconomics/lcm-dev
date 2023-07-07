@@ -550,12 +550,12 @@ def work_dec_last_period(wealth, work_status):  # noqa: ARG001
     return False
 
 
-def _construct_model(delta, num_periods, beta, wage, interest_rate):
+def _construct_model(delta, n_periods, beta, wage, interest_rate):
     """Construct model given parameters via backward inducton.
 
     Args:
         delta (float): disutility of work
-        num_periods (int): length of life
+        n_periods (int): length of life
         beta (float): discount factor
         wage (float): labor income
         interest_rate (float): interest rate
@@ -568,18 +568,18 @@ def _construct_model(delta, num_periods, beta, wage, interest_rate):
         "wage": float(wage),
         "interest_rate": float(interest_rate),
     }
-    c_pol = [None] * num_periods
-    value_func = [None] * num_periods
-    work_dec_func = [None] * num_periods
+    c_pol = [None] * n_periods
+    value_func = [None] * n_periods
+    work_dec_func = [None] * n_periods
 
-    for t in reversed(range(0, num_periods)):
-        if t == num_periods - 1:
+    for t in reversed(range(0, n_periods)):
+        if t == n_periods - 1:
             value_func[t] = value_function_last_period
             c_pol[t] = consumption_last_period
             work_dec_func[t] = work_dec_last_period
         else:
             # Time left until retirement
-            param_dict["tau"] = num_periods - t - 1
+            param_dict["tau"] = n_periods - t - 1
 
             # Generate consumption function
             policy_dict = _generate_policy_function_vector(**param_dict)
@@ -674,7 +674,7 @@ def simulate(
     beta,
     delta,
     initial_wealth_levels,
-    num_periods,
+    n_periods,
     wage,
     interest_rate,
 ):
@@ -684,7 +684,7 @@ def simulate(
         beta (float): discount factor
         delta (float): disutility of work
         initial_wealth_levels (list): initial wealth levels
-        num_periods (int): length of life
+        n_periods (int): length of life
         wage (float): labor income
         interest_rate (float): interest rate
     Returns:
@@ -697,16 +697,16 @@ def simulate(
         wage=wage,
         interest_rate=interest_rate,
         delta=delta,
-        num_periods=num_periods,
+        n_periods=n_periods,
     )
 
     grid_size = len(initial_wealth_levels)
-    c_mat = np.zeros((num_periods, grid_size))
-    work_dec_mat = np.zeros((num_periods, grid_size), dtype=np.bool_)
-    wealth_mat = np.zeros((num_periods + 1, grid_size))
+    c_mat = np.zeros((n_periods, grid_size))
+    work_dec_mat = np.zeros((n_periods, grid_size), dtype=np.bool_)
+    wealth_mat = np.zeros((n_periods + 1, grid_size))
     wealth_mat[0, :] = initial_wealth_levels  # initial wealth levels
 
-    for period in range(num_periods):
+    for period in range(n_periods):
         (
             c_mat[period, :],
             work_dec_mat[period, :],
@@ -724,7 +724,7 @@ def simulate(
     return c_mat, work_dec_mat
 
 
-def compute_value_function(grid, beta, wage, interest_rate, delta, num_periods):
+def compute_value_function(grid, beta, wage, interest_rate, delta, n_periods):
     """Compute value function analytically on a grid.
 
     Args:
@@ -733,7 +733,7 @@ def compute_value_function(grid, beta, wage, interest_rate, delta, num_periods):
         wage (float): labor income
         interest_rate (float): interest rate
         delta (float): disutility of work
-        num_periods (int): length of life
+        n_periods (int): length of life
     Returns:
         list: values of value function
 
@@ -743,13 +743,13 @@ def compute_value_function(grid, beta, wage, interest_rate, delta, num_periods):
         wage=wage,
         interest_rate=interest_rate,
         delta=delta,
-        num_periods=num_periods,
+        n_periods=n_periods,
     )
 
     values = {
         worker_type: [
             list(map(value_function[t], grid, np.repeat(work_status, len(grid))))
-            for t in range(0, num_periods)
+            for t in range(0, n_periods)
         ]
         for (worker_type, work_status) in [
             ["worker", True],

@@ -135,7 +135,7 @@ test_cases_construct_model = [
         "wealth": 10,
         "inputs": {
             "delta": -1,
-            "num_periods": 1,
+            "n_periods": 1,
             "beta": -1,
             "wage": -1,
             "interest_rate": -1,
@@ -146,7 +146,7 @@ test_cases_construct_model = [
         "wealth": 10.0,
         "inputs": {
             "delta": 0.1,
-            "num_periods": 2,
+            "n_periods": 2,
             "beta": 0.95,
             "wage": 1.0,
             "interest_rate": 0.0,

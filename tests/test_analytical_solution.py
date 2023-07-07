@@ -200,12 +200,12 @@ def test_analytical_solution(params):
 
     values = compute_value_function(
         grid=grid,
-        num_periods=2,
+        n_periods=2,
         **params,
     )
 
     consumption, work_decision = simulate(
-        num_periods=2,
+        n_periods=2,
         initial_wealth_levels=grid,
         **params,
     )
