@@ -134,14 +134,11 @@ test_cases_construct_model = [
     {
         "wealth": 10,
         "inputs": {
-            "delta": None,
+            "delta": -1,
             "num_periods": 1,
-            "param_dict": {
-                "beta": None,
-                "wage": None,
-                "interest_rate": None,
-                "tau": None,
-            },
+            "beta": -1,
+            "wage": -1,
+            "interest_rate": -1,
         },
         "expected": ([np.log(10)], [10], [False]),
     },
@@ -150,12 +147,9 @@ test_cases_construct_model = [
         "inputs": {
             "delta": 0.1,
             "num_periods": 2,
-            "param_dict": {
-                "beta": 0.95,
-                "wage": 1.0,
-                "interest_rate": 0.0,
-                "tau": None,
-            },
+            "beta": 0.95,
+            "wage": 1.0,
+            "interest_rate": 0.0,
         },
         "expected": (
             [
@@ -222,13 +216,15 @@ def test_construct_model(test_case):
     First period value function, consumption policy and work decision function.
 
     """
-    v_vec, c_vec, work_dec_vec = _construct_model(
+    value_functions, consumption_function, work_decision_functions = _construct_model(
         **test_case["inputs"],
     )
     wealth = test_case["wealth"]
 
-    sol_work_dec = [work_dec(wealth, work_status=True) for work_dec in work_dec_vec]
-    sol_v = [v(wealth, work_status=True) for v in v_vec]
-    sol_c = [c(wealth, work_status=True) for c in c_vec]
+    sol_work_dec = [
+        work_dec(wealth, work_status=True) for work_dec in work_decision_functions
+    ]
+    sol_v = [v(wealth, work_status=True) for v in value_functions]
+    sol_c = [c(wealth, work_status=True) for c in consumption_function]
 
     aaae(test_case["expected"], (sol_v, sol_c, sol_work_dec))

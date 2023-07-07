@@ -19,13 +19,13 @@ utility_test_cases = [
 
 
 @pytest.mark.parametrize(
-    ("consumption", "work_dec", "delta", "expected"),
+    ("consumption", "work_decision", "delta", "expected"),
     utility_test_cases,
 )
-def test_utility(consumption, work_dec, delta, expected):
+def test_utility(consumption, work_decision, delta, expected):
     util = utility(
         consumption=consumption,
-        work_dec=work_dec,
+        work_decision=work_decision,
         delta=delta,
     )
     aae(util, expected)

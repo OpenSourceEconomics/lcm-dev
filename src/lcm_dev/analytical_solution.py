@@ -6,18 +6,18 @@ import numpy as np
 from scipy.optimize import root_scalar
 
 
-def utility(consumption, work_dec, delta):
+def utility(consumption, work_decision, delta):
     """Utility function.
 
     Args:
         consumption (float): consumption
-        work_dec (float): work indicator (True or False)
+        work_decision (float): work indicator (True or False)
         delta (float): disutility of work
     Returns:
         float: utility
 
     """
-    return np.log(consumption) - work_dec * delta if consumption > 0 else -np.inf
+    return np.log(consumption) - work_decision * delta if consumption > 0 else -np.inf
 
 
 def liquidity_constrained_consumption(
@@ -193,12 +193,12 @@ def root_function(
     return (
         utility(
             consumption=consumption_lb(wealth),
-            work_dec=True,
+            work_decision=True,
             delta=delta,
         )
         - utility(
             consumption=consumption_ub(wealth),
-            work_dec=True,
+            work_decision=True,
             delta=delta,
         )
         + beta
@@ -435,7 +435,7 @@ def value_function_workers(
         float: value function
 
     """
-    work_dec = work_dec_func(
+    work_decision = work_dec_func(
         wealth=wealth,
         work_status=work_status,
     )
@@ -446,12 +446,12 @@ def value_function_workers(
 
     inst_util = utility(
         consumption=cons,
-        work_dec=work_dec,
+        work_decision=work_decision,
         delta=delta,
     )
     cont_val = v_prime(
-        wealth=(1 + interest_rate) * (wealth - cons) + wage * work_dec,
-        work_status=work_dec,
+        wealth=(1 + interest_rate) * (wealth - cons) + wage * work_decision,
+        work_status=work_decision,
     )
 
     return inst_util + beta * cont_val
@@ -550,17 +550,24 @@ def work_dec_last_period(wealth, work_status):  # noqa: ARG001
     return False
 
 
-def _construct_model(delta, num_periods, param_dict):
+def _construct_model(delta, num_periods, beta, wage, interest_rate):
     """Construct model given parameters via backward inducton.
 
     Args:
         delta (float): disutility of work
         num_periods (int): length of life
-        param_dict (dict): dictionary of parameters
+        beta (float): discount factor
+        wage (float): labor income
+        interest_rate (float): interest rate
     Returns:
         list: list of value functions
 
     """
+    param_dict = {
+        "beta": float(beta),
+        "wage": float(wage),
+        "interest_rate": float(interest_rate),
+    }
     c_pol = [None] * num_periods
     value_func = [None] * num_periods
     work_dec_func = [None] * num_periods
@@ -630,8 +637,8 @@ def simulate_cons_work_response(
         numpy array: wealth levels next period
 
     """
-    work_dec_vec = np.zeros(len(wealth_levels))
-    c_vec = np.zeros(len(wealth_levels))
+    work_decision = np.zeros(len(wealth_levels))
+    consumption = np.zeros(len(wealth_levels))
     wealth_next_period = np.zeros(len(wealth_levels))
 
     if period == 0:
@@ -640,27 +647,27 @@ def simulate_cons_work_response(
             work_status=True,
         )
         consumption_function = partial(consumption_function, work_status=True)
-        work_dec_vec = list(map(work_decision_function, wealth_levels))
-        c_vec = list(map(consumption_function, wealth_levels))
+        work_decision = list(map(work_decision_function, wealth_levels))
+        consumption = list(map(consumption_function, wealth_levels))
         wealth_next_period = (1 + interest_rate) * (
-            wealth_levels - c_vec
-        ) + np.multiply(wage, work_dec_vec)
+            wealth_levels - consumption
+        ) + np.multiply(wage, work_decision)
 
     else:
         for grid_id, wealth in enumerate(wealth_levels):
-            work_dec_vec[grid_id] = work_decision_function(
+            work_decision[grid_id] = work_decision_function(
                 wealth=wealth,
                 work_status=work_status_last_period[grid_id],
             )
-            c_vec[grid_id] = consumption_function(
+            consumption[grid_id] = consumption_function(
                 wealth=wealth,
-                work_status=work_dec_vec[grid_id],
+                work_status=work_decision[grid_id],
             )
             wealth_next_period[grid_id] = (1 + interest_rate) * (
-                wealth - c_vec[grid_id]
-            ) + wage * work_dec_vec[grid_id]
+                wealth - consumption[grid_id]
+            ) + wage * work_decision[grid_id]
 
-    return c_vec, work_dec_vec, wealth_next_period
+    return consumption, work_decision, wealth_next_period
 
 
 def simulate(
@@ -685,7 +692,7 @@ def simulate(
         numpy array: simulated work decision
 
     """
-    _, consumption_function, work_decision_function = analytical_solution(
+    _, consumption_function, work_decision_function = _construct_model(
         beta=beta,
         wage=wage,
         interest_rate=interest_rate,
@@ -717,44 +724,6 @@ def simulate(
     return c_mat, work_dec_mat
 
 
-def analytical_solution(
-    beta,
-    wage,
-    interest_rate,
-    delta,
-    num_periods,
-):
-    """Construct value, consumption, and work decision function analytically.
-
-    Args:
-        beta (float): discount factor
-        wage (float): labor income
-        interest_rate (float): interest rate
-        delta (float): disutility of work
-        num_periods (int): length of life
-    Returns:
-        list: value functions
-        list: consumption policy functions
-        list: work decision functions
-
-    """
-    # Unpack parameters
-
-    param_dict = {
-        "beta": float(beta),
-        "wage": float(wage),
-        "interest_rate": float(interest_rate),
-    }
-
-    v_fct, c_pol, work_dec = _construct_model(
-        delta=delta,
-        num_periods=num_periods,
-        param_dict=param_dict,
-    )
-
-    return v_fct, c_pol, work_dec
-
-
 def compute_value_function(grid, beta, wage, interest_rate, delta, num_periods):
     """Compute value function analytically on a grid.
 
@@ -769,12 +738,12 @@ def compute_value_function(grid, beta, wage, interest_rate, delta, num_periods):
         list: values of value function
 
     """
-    value_function, _, _ = analytical_solution(
-        beta,
-        wage,
-        interest_rate,
-        delta,
-        num_periods,
+    value_function, _, _ = _construct_model(
+        beta=beta,
+        wage=wage,
+        interest_rate=interest_rate,
+        delta=delta,
+        num_periods=num_periods,
     )
 
     values = {

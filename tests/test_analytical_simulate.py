@@ -3,7 +3,6 @@
 import numpy as np
 import pytest
 from lcm_dev.analytical_solution import (
-    analytical_solution,
     simulate,
     simulate_cons_work_response,
 )
@@ -23,7 +22,7 @@ test_cases_simulate_cons_work_resp = [
         },
         "expected": {
             "consumption": np.linspace(1, 100, 12),
-            "work_dec_vec": np.ones(12, dtype=bool),
+            "work_decision": np.ones(12, dtype=bool),
             "wealth_next_period": np.ones(12, dtype=float),
         },
     },
@@ -40,7 +39,7 @@ test_cases_simulate_cons_work_resp = [
         },
         "expected": {
             "consumption": np.linspace(1, 100, 12),
-            "work_dec_vec": np.ones(12, dtype=bool),
+            "work_decision": np.ones(12, dtype=bool),
             "wealth_next_period": np.ones(12, dtype=float),
         },
     },
@@ -59,7 +58,7 @@ test_cases_simulate_cons_work_resp = [
         },
         "expected": {
             "consumption": np.linspace(1, 100, 12) ** 0.5,
-            "work_dec_vec": [True] * 6 + [False] * 6,
+            "work_decision": [True] * 6 + [False] * 6,
             "wealth_next_period": (
                 np.linspace(1, 100, 12) - np.linspace(1, 100, 12) ** 0.5
             )
@@ -82,24 +81,6 @@ test_cases_simulate = (
     ),
 )
 
-test_cases_analytical_solution = [
-    {
-        "inputs": {
-            "beta": 0.9,
-            "wage": 1.0,
-            "interest_rate": 0.0,
-            "delta": 0.0,
-            "num_periods": 1,
-        },
-        "expected": {
-            "values": np.log(np.linspace(1, 100, 12)),
-            "consumption": np.linspace(1, 100, 12),
-            "work_decision": np.repeat(False, 12),  # noqa: FBT003
-        },
-        "wealth_grid": np.linspace(1, 100, 12),
-    },
-]
-
 test_cases_analytical_solution_work_decision = [
     {
         "kwargs": {
@@ -120,11 +101,11 @@ def test_simulate_cons_work_resp(test_case):
     """Test the simulate_cons_work_response function."""
     expected = test_case["expected"]
     inputs = test_case["inputs"]
-    c, work_dec, wealth_next_period = simulate_cons_work_response(
+    c, work_decision, wealth_next_period = simulate_cons_work_response(
         **inputs,
     )
     aaae(c, expected["consumption"])
-    aaae(work_dec, expected["work_dec_vec"])
+    aaae(work_decision, expected["work_decision"])
     aaae(wealth_next_period, expected["wealth_next_period"])
 
 
@@ -162,26 +143,6 @@ def test_simulate(
     )
     aaae(consumption[0], expected_consumption)
     aaae(work_decision[0], expected_work_decision)
-
-
-@pytest.mark.parametrize("test_case", test_cases_analytical_solution)
-def test_analytical_solution(test_case):
-    """Test the analytical solution function."""
-    grid = test_case["wealth_grid"]
-    expected = test_case["expected"]
-    inputs = test_case["inputs"]
-    value_function, consumption_function, work_decision_function = analytical_solution(
-        **inputs,
-    )
-    values_worker = [value_function[0](x, work_status=True) for x in grid]
-    values_retired = [value_function[0](x, work_status=False) for x in grid]
-    consumption = [consumption_function[0](x, work_status=True) for x in grid]
-    work_decision = [work_decision_function[0](x, work_status=True) for x in grid]
-
-    aaae(expected["values"], values_worker)
-    aaae(expected["values"], values_retired)
-    aaae(expected["consumption"], consumption)
-    aaae(expected["work_decision"], work_decision)
 
 
 @pytest.mark.parametrize("test_case", test_cases_analytical_solution_work_decision)
