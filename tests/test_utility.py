@@ -8,7 +8,7 @@ from lcm_dev.analytical_solution import (
 )
 from numpy.testing import assert_almost_equal as aae
 
-utility_test_cases = [
+UTILTIY_TEST_CASES = [
     (1.0, False, 0.0, 0.0),
     (1.0, True, 0.0, 0.0),
     (1.0, True, 0.5, -0.5),
@@ -20,7 +20,7 @@ utility_test_cases = [
 
 @pytest.mark.parametrize(
     ("consumption", "work_decision", "delta", "expected"),
-    utility_test_cases,
+    UTILTIY_TEST_CASES,
 )
 def test_utility(consumption, work_decision, delta, expected):
     util = utility(

@@ -12,7 +12,7 @@ from lcm_dev.analytical_solution import (
 from numpy.testing import assert_almost_equal as aae
 from numpy.testing import assert_array_almost_equal as aaae
 
-test_cases_ret_threshold = [
+TEST_CASES_RET_THRESHOLD = [
     # 1 period before end of life
     (
         3.0,
@@ -35,7 +35,7 @@ test_cases_ret_threshold = [
 ]
 
 
-test_cases_root_fct = [
+TEST_CASES_ROOT_FUNCTION = [
     # Value of root function without v_prime
     {
         "inputs": {
@@ -68,7 +68,7 @@ test_cases_root_fct = [
     },
 ]
 
-test_cases_wealth_thresholds_kinks_discs = [
+TEST_CASES_WEALTH_THRESHOLD_KINKS_DISCS = [
     # Test root finding for trivial value function
     {
         "inputs": {
@@ -109,7 +109,7 @@ test_cases_wealth_thresholds_kinks_discs = [
     },
 ]
 
-test_cases_wealth_threshold = [
+TEST_CASES_WEALTH_THRESHOLD = [
     # Check analytical calculation of thresholds
     {
         "inputs": {
@@ -162,7 +162,7 @@ test_cases_wealth_threshold = [
     },
 ]
 
-test_cases_piecewise_conditions = [
+TEST_CASES_PIECEWISE_CONDITIONS = [
     # wealth, thresholds, expected
     (0.5, [0, 1, 2, 3], [True, False, False]),
     (10, [0, 10, 20, 30], [False, True, False]),
@@ -171,7 +171,7 @@ test_cases_piecewise_conditions = [
 
 @pytest.mark.parametrize(
     ("wage", "interest_rate", "beta", "delta", "tau", "expected"),
-    test_cases_ret_threshold,
+    TEST_CASES_RET_THRESHOLD,
 )
 def test_retirement_threshold(wage, interest_rate, beta, delta, tau, expected):
     """Test the retirement threshold function."""
@@ -185,14 +185,14 @@ def test_retirement_threshold(wage, interest_rate, beta, delta, tau, expected):
     aae(retirement_threshold_solution, expected)
 
 
-@pytest.mark.parametrize("test", test_cases_root_fct)
+@pytest.mark.parametrize("test", TEST_CASES_ROOT_FUNCTION)
 def test_root_fct(test):
     """Test the root function."""
     sol_root_fct = root_function(**test["inputs"])
     aae(sol_root_fct, test["expected"])
 
 
-@pytest.mark.parametrize("test", test_cases_wealth_thresholds_kinks_discs)
+@pytest.mark.parametrize("test", TEST_CASES_WEALTH_THRESHOLD_KINKS_DISCS)
 def test_wealth_thresholds_kinks_discs(test):
     """Test the wealth thresholds, kinks and discontinuities function."""
     aae(
@@ -201,7 +201,7 @@ def test_wealth_thresholds_kinks_discs(test):
     )
 
 
-@pytest.mark.parametrize("test", test_cases_wealth_threshold)
+@pytest.mark.parametrize("test", TEST_CASES_WEALTH_THRESHOLD)
 def test_compute_wealth_thresholds_length(test):
     """Test the wealth thresholds function."""
     wt = _compute_wealth_tresholds(**test["inputs"])
@@ -211,7 +211,7 @@ def test_compute_wealth_thresholds_length(test):
 
 @pytest.mark.parametrize(
     ("wealth", "thresholds", "expected"),
-    test_cases_piecewise_conditions,
+    TEST_CASES_PIECEWISE_CONDITIONS,
 )
 def test_evaluate_piecewise_conditions(wealth, thresholds, expected):
     """Test the piecewise conditions function."""

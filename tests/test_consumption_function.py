@@ -11,7 +11,7 @@ from lcm_dev.analytical_solution import (
 )
 from numpy.testing import assert_array_almost_equal as aaae
 
-test_cases_liquidity = [
+TEST_CASES_LIQUIDITY = [
     # Liquidity constraint binding
     (10.0, 3.0, 0.0, 0.95, 0, 10.0),
     (50.0, 3.0, 0.0, 0.95, 0, 50.0),
@@ -26,7 +26,7 @@ test_cases_liquidity = [
     (50.0, 3.0, 0.1, 0.95, 1, (50 + 3 / 1.1) / (1.95)),
 ]
 
-test_cases_retirement = [
+TEST_CASES_RETIREMENT = [
     # Retirement this period, end of life today
     (10.0, 3.0, 0.0, 0.95, 0, 0, 10.0),
     (50.0, 3.0, 0.0, 0.95, 0, 0, 50.0),
@@ -44,7 +44,7 @@ test_cases_retirement = [
     (50.0, 3.0, 0.1, 0.95, 1, 1, (50 + 3 / 1.1) / 1.95),
 ]
 
-test_cases_retiree_consumption = [
+TEST_CASES_RETIREE_CONSUMPTION = [
     # Retiree consumption, end of life today
     (10.0, 0, 0.95, 10.0),
     (50.0, 0, 0.95, 50.0),
@@ -56,7 +56,7 @@ test_cases_retiree_consumption = [
     (50.0, 2, 0.95, 50 / (1 + 0.95 + 0.95**2)),
 ]
 
-test_cases_policy_func_vector = [
+TEST_CASES_POLICY_FUNC_VECTOR = [
     # Consumption policies, end of life today
     {
         "inputs": {
@@ -137,7 +137,7 @@ test_cases_policy_func_vector = [
     },
 ]
 
-test_cases_consumption = [
+TEST_CASES_CONSUMPTION = [
     {
         "inputs": {
             "work_status": False,
@@ -168,7 +168,7 @@ test_cases_consumption = [
 
 @pytest.mark.parametrize(
     ("wealth", "wage", "interest_rate", "beta", "constraint_timing", "expected"),
-    test_cases_liquidity,
+    TEST_CASES_LIQUIDITY,
 )
 def test_liquidity_constrained_consumption(
     wealth,
@@ -194,7 +194,7 @@ def test_liquidity_constrained_consumption(
 
 @pytest.mark.parametrize(
     ("wealth", "wage", "interest_rate", "beta", "tau", "retirement_timing", "expected"),
-    test_cases_retirement,
+    TEST_CASES_RETIREMENT,
 )
 def test_retirement_discontinuity_consumption(
     wealth,
@@ -219,7 +219,7 @@ def test_retirement_discontinuity_consumption(
 
 @pytest.mark.parametrize(
     ("wealth", "tau", "beta", "expected"),
-    test_cases_retiree_consumption,
+    TEST_CASES_RETIREE_CONSUMPTION,
 )
 def test_retiree_consumption(wealth, tau, beta, expected):
     """Test consumption for retirees."""
@@ -231,7 +231,7 @@ def test_retiree_consumption(wealth, tau, beta, expected):
     aaae(sol, expected)
 
 
-@pytest.mark.parametrize("test", test_cases_policy_func_vector)
+@pytest.mark.parametrize("test", TEST_CASES_POLICY_FUNC_VECTOR)
 def test_policy_func_vector(test):
     """Test whole policy function vector."""
     policy_vec = _generate_policy_function_vector(
@@ -244,7 +244,7 @@ def test_policy_func_vector(test):
         aaae(sol, exp)
 
 
-@pytest.mark.parametrize("test", test_cases_consumption)
+@pytest.mark.parametrize("test", TEST_CASES_CONSUMPTION)
 def test_consumption(test):
     """Test final consumption function."""
     wealth_level = np.linspace(0, 100, 12)

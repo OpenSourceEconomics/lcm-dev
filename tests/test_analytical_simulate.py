@@ -8,7 +8,7 @@ from lcm_dev.analytical_solution import (
 )
 from numpy.testing import assert_array_almost_equal as aaae
 
-test_cases_simulate_cons_work_resp = [
+TEST_CASES_SIMULATE_CONS_WORK_RESPONSE = [
     # First period
     {
         "inputs": {
@@ -68,7 +68,7 @@ test_cases_simulate_cons_work_resp = [
     },
 ]
 
-test_cases_simulate = (
+TEST_CASES_SIMULATE = (
     (
         1.0,
         1.0,
@@ -81,7 +81,7 @@ test_cases_simulate = (
     ),
 )
 
-test_cases_analytical_solution_work_decision = [
+TEST_CASES_WORK_DECISION = [
     {
         "kwargs": {
             "beta": 0.95,
@@ -96,7 +96,7 @@ test_cases_analytical_solution_work_decision = [
 ]
 
 
-@pytest.mark.parametrize("test_case", test_cases_simulate_cons_work_resp)
+@pytest.mark.parametrize("test_case", TEST_CASES_SIMULATE_CONS_WORK_RESPONSE)
 def test_simulate_cons_work_resp(test_case):
     """Test the simulate_cons_work_response function."""
     expected = test_case["expected"]
@@ -120,7 +120,7 @@ def test_simulate_cons_work_resp(test_case):
         "expected_consumption",
         "expected_work_decision",
     ),
-    test_cases_simulate,
+    TEST_CASES_SIMULATE,
 )
 def test_simulate(
     beta,
@@ -145,7 +145,7 @@ def test_simulate(
     aaae(work_decision[0], expected_work_decision)
 
 
-@pytest.mark.parametrize("test_case", test_cases_analytical_solution_work_decision)
+@pytest.mark.parametrize("test_case", TEST_CASES_WORK_DECISION)
 def test_simulate_work_dec(test_case):
     """Test that work decision is not False in all periods for lowest wealth level."""
     _, work_decision = simulate(**test_case["kwargs"])

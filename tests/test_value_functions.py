@@ -12,7 +12,7 @@ from lcm_dev.analytical_solution import (
 from numpy.testing import assert_array_almost_equal as aaae
 from numpy.testing import assert_array_almost_equal as aae
 
-test_cases_value_func_retirees = [
+TEST_CASES_VALUES_RETIREES = [
     (10.0, 1.0, 0, 0.0, np.log(10.0)),
     (20.0, 1.0, 0, 0.0, np.log(20.0)),
     (10.0, 0.95, 1, 0.0, np.log(10.0 / 1.95) + 0.95 * np.log(10.0 - (10.0 / 1.95))),
@@ -38,7 +38,7 @@ test_cases_value_func_retirees = [
 ]
 
 
-test_cases_value_func_workers = [
+TEST_CASES_VALUES_WORKERS = [
     # Value function without continuation value
     {
         "inputs": {
@@ -86,7 +86,7 @@ test_cases_value_func_workers = [
     },
 ]
 
-test_cases_value_func = [
+TEST_CASES_VALUE_FUNC = [
     # Value function retirees
     {
         "inputs": {
@@ -123,14 +123,14 @@ test_cases_value_func = [
     },
 ]
 
-test_cases_value_func_last_period = [
+TEST_CASES_VALUE_FUNC_LAST_PERIOD = [
     (10, False, np.log(10)),
     (10, True, np.log(10)),
     (-1, False, -np.inf),
     (-1, True, -np.inf),
 ]
 
-test_cases_construct_model = [
+TEST_CASES_CONSTRUCT_MODEL = [
     {
         "wealth": 10,
         "inputs": {
@@ -171,7 +171,7 @@ test_cases_construct_model = [
 
 @pytest.mark.parametrize(
     ("wealth", "beta", "tau", "interest_rate", "expected"),
-    test_cases_value_func_retirees,
+    TEST_CASES_VALUES_RETIREES,
 )
 def test_value_func_retirees(wealth, beta, tau, interest_rate, expected):
     solution = value_function_retirees(
@@ -183,13 +183,13 @@ def test_value_func_retirees(wealth, beta, tau, interest_rate, expected):
     aaae(expected, solution)
 
 
-@pytest.mark.parametrize("test_case", test_cases_value_func_workers)
+@pytest.mark.parametrize("test_case", TEST_CASES_VALUES_WORKERS)
 def test_value_func_workers(test_case):
     solution = value_function_workers(**test_case["inputs"])
     aaae(test_case["expected"], solution)
 
 
-@pytest.mark.parametrize("test_case", test_cases_value_func)
+@pytest.mark.parametrize("test_case", TEST_CASES_VALUE_FUNC)
 def test_value_func(test_case):
     solution = _value_function(
         **test_case["inputs"],
@@ -199,7 +199,7 @@ def test_value_func(test_case):
 
 @pytest.mark.parametrize(
     ("wealth", "work_status", "expected"),
-    test_cases_value_func_last_period,
+    TEST_CASES_VALUE_FUNC_LAST_PERIOD,
 )
 def test_value_func_last_period(wealth, work_status, expected):
     solution = value_function_last_period(
@@ -209,7 +209,7 @@ def test_value_func_last_period(wealth, work_status, expected):
     aae(expected, solution)
 
 
-@pytest.mark.parametrize("test_case", test_cases_construct_model)
+@pytest.mark.parametrize("test_case", TEST_CASES_CONSTRUCT_MODEL)
 def test_construct_model(test_case):
     """Test fully constructed model.
 

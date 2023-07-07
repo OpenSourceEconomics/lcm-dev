@@ -5,7 +5,7 @@ from lcm_dev.analytical_solution import (
     _work_decision,
 )
 
-test_cases_work_dec = [
+TEST_CASES_WORK_DEC = [
     ((10, False, [0, 10, 20, 30]), False),
     ((40, False, [0, 10, 20, 30]), False),
     ((40, True, [0, 10, 20, 30]), False),
@@ -14,7 +14,7 @@ test_cases_work_dec = [
 ]
 
 
-@pytest.mark.parametrize(("inputs", "expected"), test_cases_work_dec)
+@pytest.mark.parametrize(("inputs", "expected"), TEST_CASES_WORK_DEC)
 def test_evaluate_piecewise_conditions(inputs, expected):
     """Test the piecewise conditions function."""
     assert _work_decision(*inputs) == expected
