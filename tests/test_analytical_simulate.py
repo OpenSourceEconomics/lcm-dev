@@ -8,6 +8,8 @@ from lcm_dev.analytical_solution import (
 )
 from numpy.testing import assert_array_almost_equal as aaae
 
+# ruff: noqa: FBT003
+
 TEST_CASES_SIMULATE_CONS_WORK_RESPONSE = [
     # First period
     {
@@ -18,12 +20,12 @@ TEST_CASES_SIMULATE_CONS_WORK_RESPONSE = [
             "interest_rate": 0.0,
             "work_decision_function": lambda wealth, work_status: True,  # noqa: ARG005
             "consumption_function": lambda wealth, work_status: wealth,  # noqa: ARG005
-            "work_status_last_period": [True] * 12,
+            "work_status_last_period": np.repeat(True, 12),
         },
         "expected": {
             "consumption": np.linspace(1, 100, 12),
-            "work_decision": np.ones(12, dtype=bool),
-            "wealth_next_period": np.ones(12, dtype=float),
+            "work_decision": np.repeat(True, 12),
+            "wealth_next_period": np.repeat(1.0, 12),
         },
     },
     # Second period
@@ -35,12 +37,12 @@ TEST_CASES_SIMULATE_CONS_WORK_RESPONSE = [
             "interest_rate": 0.0,
             "work_decision_function": lambda wealth, work_status: True,  # noqa: ARG005
             "consumption_function": lambda wealth, work_status: wealth,  # noqa: ARG005
-            "work_status_last_period": [True] * 12,
+            "work_status_last_period": np.repeat(True, 12),
         },
         "expected": {
             "consumption": np.linspace(1, 100, 12),
-            "work_decision": np.ones(12, dtype=bool),
-            "wealth_next_period": np.ones(12, dtype=float),
+            "work_decision": np.repeat(True, 12),
+            "wealth_next_period": np.repeat(1.0, 12),
         },
     },
     # Second period, nontrivial consumption and work function
@@ -54,11 +56,11 @@ TEST_CASES_SIMULATE_CONS_WORK_RESPONSE = [
             < 50,
             "consumption_function": lambda wealth, work_status: wealth  # noqa: ARG005
             ** 0.5,
-            "work_status_last_period": [True] * 12,
+            "work_status_last_period": np.repeat(True, 12),
         },
         "expected": {
             "consumption": np.linspace(1, 100, 12) ** 0.5,
-            "work_decision": [True] * 6 + [False] * 6,
+            "work_decision": np.repeat(True, 6) + np.repeat(False, 6),
             "wealth_next_period": (
                 np.linspace(1, 100, 12) - np.linspace(1, 100, 12) ** 0.5
             )
@@ -77,7 +79,7 @@ TEST_CASES_SIMULATE = (
         2.0,
         0.0,
         np.linspace(1, 100, 12),
-        np.repeat(False, 12),  # noqa: FBT003
+        np.repeat(False, 12),
     ),
 )
 
