@@ -42,7 +42,7 @@ PARAMS = {
     },
 }
 
-PERIOD = 5
+PERIOD = 0
 
 
 @pytask.mark.produces(BLD.joinpath("plots", "consumption_function.html"))
@@ -73,4 +73,3 @@ def task_create_consumption_function_plots(produces):
         period=PERIOD,
     )
     fig.write_html(produces)
-    fig.show()
