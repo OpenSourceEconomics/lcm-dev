@@ -241,7 +241,7 @@ def wealth_thresholds_kinks_discs(
     consumption_lb = consumption_policy[bracket + 1]
     consumption_ub = consumption_policy[bracket + 2]
 
-    root_fct = partial(
+    partialed_root_fct = partial(
         root_function,
         consumption_lb=consumption_lb,
         consumption_ub=consumption_ub,
@@ -253,7 +253,7 @@ def wealth_thresholds_kinks_discs(
     )
 
     sol = root_scalar(
-        root_fct,
+        partialed_root_fct,
         method="brentq",
         bracket=[wealth_thresholds[bracket + 1], ret_threshold],
         xtol=1e-10,
