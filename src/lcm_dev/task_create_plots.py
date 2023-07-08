@@ -1,6 +1,4 @@
 import pytask
-
-# temporary until lcm branch is merged
 from lcm.entry_point import get_lcm_function
 from pybaum import tree_update
 
@@ -10,6 +8,8 @@ from lcm_dev.create_plots import plot_consumption_function
 from lcm_dev.models import (
     PHELPS_DEATON_NO_BORROWING,
 )
+
+# temporary until lcm branch is merged
 
 UPDATE_CONFIG = {
     "states": {
@@ -45,7 +45,9 @@ PARAMS = {
 PERIOD = 0
 
 
-@pytask.mark.produces(BLD.joinpath("plots", "consumption_function.html"))
+@pytask.mark.produces(
+    BLD.joinpath("plots", f"consumption_function_period_{PERIOD}.html"),
+)
 def task_create_consumption_function_plots(produces):
     """Create plots of consumption function."""
     # LCM solution
@@ -54,7 +56,6 @@ def task_create_consumption_function_plots(produces):
     model_params = tree_update(param_template, PARAMS)
 
     model_solution = solve_model(model_params)
-
     # Analytical consumption function
     _, analytical_consumption_fct, _ = _construct_model(
         n_periods=UPDATE_CONFIG["n_periods"],

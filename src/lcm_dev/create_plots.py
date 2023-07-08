@@ -19,7 +19,13 @@ def compute_analytical_consumption(consumption_function, grid, work_status):
     return [consumption_function(wealth=w, work_status=work_status) for w in grid]
 
 
-def compute_numerical_consumption(model, model_solution, model_params, period):
+def compute_numerical_consumption(
+    model,
+    model_solution,
+    model_params,
+    period,
+    lagged_retirement,
+):
     """Simulate consumption values given numerical model solution.
 
     Args:
@@ -27,6 +33,7 @@ def compute_numerical_consumption(model, model_solution, model_params, period):
         model_solution (list): Numerical model solution.
         model_params (dict): Model parameters.
         period (int): Period for which to compute consumption.
+        lagged_retirement (float, optional): Lagged retirement status.
 
     Returns:
         list: Consumption values for the given grid.
@@ -43,7 +50,7 @@ def compute_numerical_consumption(model, model_solution, model_params, period):
                 stop=model["states"]["wealth"]["stop"],
                 num=grid_size,
             ),
-            "lagged_retirement": jnp.repeat(0, repeats=grid_size),
+            "lagged_retirement": jnp.repeat(lagged_retirement, repeats=grid_size),
         },
     )
     return simulation_results[0]["choices"]["consumption"]
@@ -102,6 +109,7 @@ def plot_consumption_function(
             model_solution=lcm_solution,
             model_params=model_params,
             period=period,
+            lagged_retirement=1 - work_status,
         )
         fig.add_trace(
             go.Scatter(
