@@ -1,5 +1,7 @@
 import jax.numpy as jnp
 import numpy as np
+import pandas as pd
+import plotly.express as px
 import plotly.graph_objects as go
 from lcm.entry_point import get_lcm_function
 
@@ -123,5 +125,62 @@ def plot_consumption_function(
         title=f"Consumption function for period {period}",
         xaxis_title="Wealth",
         yaxis_title="Consumption",
+    )
+    return fig
+
+
+def plot_consumption_profiles(
+    analytical_consumption,
+    numerical_consumption,
+    grid,
+):
+    """Plot consumption profiles for a given grid.
+
+    Args:
+        analytical_consumption (list): Analytical consumption values.
+        numerical_consumption (list): Numerical consumption values.
+        grid (list): Grid of wealth values.
+
+    """
+    # Prepare Data for Plotting
+    plot_data_inputs = []
+    for data_type in [analytical_consumption, numerical_consumption]:
+        list_of_series = []
+        for consumption_per_wealth, wealth_level in zip(np.array(data_type).T, grid):
+            list_of_series.append(pd.Series(consumption_per_wealth, name=wealth_level))
+        plot_data_inputs.append(
+            pd.concat(
+                list_of_series,
+                keys=grid,
+                axis=0,
+                names=["wealth", "period"],
+            ).to_frame("consumption"),
+        )
+    plot_data = pd.concat(
+        plot_data_inputs,
+        axis=0,
+        keys=["analytical", "numerical"],
+        names=["calculation_procedure"],
+    )
+    plot_data = plot_data.reset_index()
+
+    # Plot Data
+    fig = px.scatter(
+        plot_data,
+        x="period",
+        y="consumption",
+        color="calculation_procedure",
+        animation_frame="wealth",
+    )
+    fig.update_layout(
+        title="Consumption profiles",
+        xaxis_title="Period",
+        yaxis_title="Consumption",
+        xaxis={
+            "range": [-1, plot_data["period"].max() + 1],
+        },
+        yaxis={
+            "range": [-1, plot_data["consumption"].max() + 1],
+        },
     )
     return fig
