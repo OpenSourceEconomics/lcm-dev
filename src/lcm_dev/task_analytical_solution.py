@@ -4,49 +4,53 @@ import pickle
 
 import numpy as np
 import pytask
+from lcm.get_model import get_model
 
 from lcm_dev.analytical_solution import compute_value_function, simulate
 from lcm_dev.config import BLD
 
 MODELS = {
-    "iskhakov_2017": {
-        "beta": 0.98,
-        "delta": 1.0,
-        "wage": 20.0,
-        "interest_rate": 0.0,
-        "n_periods": 5,
-    },
-    "low_delta": {
-        "beta": 0.98,
-        "delta": 0.1,
-        "wage": 20.0,
-        "interest_rate": 0.0,
-        "n_periods": 3,
-    },
+    "iskhakov_2017_five_periods": get_model("iskhakov_2017_five_periods"),
+    "iskhakov_2017_low_delta": get_model("iskhakov_2017_low_delta"),
 }
 
-WEALTH_GRID = np.linspace(1, 100, 10_000)
 INITIAL_WEALTH_LEVELS = np.linspace(1, 100, 20)
 
-for model, params in MODELS.items():
+for model_name, model in MODELS.items():
 
     @pytask.mark.task(
-        id=model,
+        id=model_name,
         kwargs={
             "produces": {
-                "values": BLD / "analytical_solution" / f"{model}_v.pkl",
-                "consumption": BLD / "analytical_solution" / f"{model}_c.pkl",
-                "work_decision": BLD / "analytical_solution" / f"{model}_work.pkl",
+                "values": BLD / "analytical_solution" / f"{model_name}_v.pkl",
+                "consumption": BLD / "analytical_solution" / f"{model_name}_c.pkl",
+                "work_decision": BLD / "analytical_solution" / f"{model_name}_work.pkl",
             },
-            "params": params,
+            "model": model,
         },
     )
-    def task_create_analytical_solution(produces, params):
+    def task_create_analytical_solution(produces, model):
         """Store analytical solution in a pickle file."""
-        values = compute_value_function(grid=WEALTH_GRID, **params)
+        wealth_grid_start = model.model["states"]["wealth"]["start"]
+        wealth_grid_stop = model.model["states"]["wealth"]["stop"]
+        wealth_grid_size = model.model["states"]["wealth"]["n_points"]
+        wealth_grid = np.linspace(wealth_grid_start, wealth_grid_stop, wealth_grid_size)
+
+        values = compute_value_function(
+            grid=wealth_grid,
+            beta=model.params["beta"],
+            delta=model.params["utility"]["delta"],
+            interest_rate=model.params["next_wealth"]["interest_rate"],
+            wage=model.params["next_wealth"]["wage"],
+            n_periods=model.model["n_periods"],
+        )
         consumption, work_decision = simulate(
             initial_wealth_levels=INITIAL_WEALTH_LEVELS,
-            **params,
+            beta=model.params["beta"],
+            delta=model.params["utility"]["delta"],
+            interest_rate=model.params["next_wealth"]["interest_rate"],
+            wage=model.params["next_wealth"]["wage"],
+            n_periods=model.model["n_periods"],
         )
         pickle.dump(
             values,
