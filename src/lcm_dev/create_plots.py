@@ -184,3 +184,86 @@ def plot_consumption_profiles(
         },
     )
     return fig
+
+
+def plot_value_functions(analytical_solution, numerical_solution, grid, periods):
+    """Plot value functions.
+
+    Args:
+        analytical_solution (dict): Analytical value array.
+        numerical_solution (dict): Numerical value array.
+        grid (list): Grid of wealth values.
+        periods (int): Number of periods.
+
+    Returns:
+        go.Figure: Plotly figure.
+
+    """
+    plot_data = {}
+    for state in ["worker", "retired"]:
+        plot_data_inputs = []
+        for data_type in [analytical_solution["worker"], numerical_solution["worker"]]:
+            list_of_series = []
+            for values_by_period, period in zip(
+                np.array(data_type),
+                np.arange(periods),
+            ):
+                list_of_series.append(pd.Series(values_by_period, name=period))
+            plot_data_inputs.append(
+                pd.concat(
+                    list_of_series,
+                    keys=np.arange(periods),
+                    axis=0,
+                    names=["period", "wealth"],
+                ).to_frame("values"),
+            )
+        plot_data_state = pd.concat(
+            plot_data_inputs,
+            axis=0,
+            keys=["analytical", "numerical"],
+            names=["calculation_procedure"],
+        )
+
+        plot_data_state = plot_data_state.reset_index()
+        plot_data_state["wealth"] = np.tile(grid, 2 * periods)
+
+        plot_data[state] = plot_data_state
+
+    fig_worker = px.line(
+        plot_data["worker"],
+        x="wealth",
+        y="values",
+        color="calculation_procedure",
+        animation_frame="period",
+    )
+    fig_worker.update_layout(
+        title="Value functions",
+        xaxis_title="Wealth",
+        yaxis_title="Value",
+        xaxis={
+            "range": [-1, plot_data["worker"]["wealth"].max() + 1],
+        },
+        yaxis={
+            "range": [-1, plot_data["worker"]["values"].max() + 1],
+        },
+    )
+    fig_retired = px.line(
+        plot_data["retired"],
+        x="wealth",
+        y="values",
+        color="calculation_procedure",
+        animation_frame="period",
+    )
+    fig_retired.update_layout(
+        title="Value functions",
+        xaxis_title="Wealth",
+        yaxis_title="Value",
+        xaxis={
+            "range": [-1, plot_data["retired"]["wealth"].max() + 1],
+        },
+        yaxis={
+            "range": [-1, plot_data["retired"]["values"].max() + 1],
+        },
+    )
+
+    return fig_worker, fig_retired

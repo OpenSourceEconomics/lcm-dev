@@ -4,9 +4,17 @@ import pytask
 from lcm.entry_point import get_lcm_function
 from lcm.get_model import get_model
 
-from lcm_dev.analytical_solution import _construct_model, simulate
+from lcm_dev.analytical_solution import (
+    _construct_model,
+    compute_value_function,
+    simulate,
+)
 from lcm_dev.config import BLD
-from lcm_dev.create_plots import plot_consumption_function, plot_consumption_profiles
+from lcm_dev.create_plots import (
+    plot_consumption_function,
+    plot_consumption_profiles,
+    plot_value_functions,
+)
 
 PERIOD = 0
 
@@ -81,3 +89,50 @@ def task_create_consumption_profile_plots(produces):
         grid=grid,
     )
     fig.write_html(produces)
+
+
+@pytask.mark.produces(
+    {
+        "worker": BLD.joinpath(
+            "plots",
+            "value_functions_worker.html",
+        ),
+        "retired": BLD.joinpath("plots", "value_functions_retired.html"),
+    },
+)
+def task_create_value_function_plots(produces):
+    """Create plots of value functions over the life-cycle."""
+    # LCM solution
+    model = get_model("iskhakov_2017_five_periods")
+    solve_model, _ = get_lcm_function(model=model.model, targets="solve")
+    vf_arr_list = solve_model(model.params)
+    numerical_solution = np.stack(vf_arr_list)
+    numerical_solution = {
+        "worker": numerical_solution[:, 0, :],
+        "retired": numerical_solution[:, 1, :],
+    }
+
+    # Analytical solution
+    grid_start = model.model["states"]["wealth"]["start"]
+    grid_end = model.model["states"]["wealth"]["stop"]
+    grid_size = model.model["states"]["wealth"]["n_points"]
+    grid = np.linspace(grid_start, grid_end, grid_size)
+
+    analytical_solution = compute_value_function(
+        grid=grid,
+        beta=model.params["beta"],
+        delta=model.params["utility"]["delta"],
+        interest_rate=model.params["next_wealth"]["interest_rate"],
+        wage=model.params["next_wealth"]["wage"],
+        n_periods=model.model["n_periods"],
+    )
+
+    # Create plots
+    fig_worker, fig_retired = plot_value_functions(
+        analytical_solution=analytical_solution,
+        numerical_solution=numerical_solution,
+        grid=grid,
+        periods=model.model["n_periods"],
+    )
+    fig_worker.write_html(produces["worker"])
+    fig_retired.write_html(produces["retired"])
