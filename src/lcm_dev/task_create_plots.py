@@ -67,10 +67,12 @@ def task_create_consumption_profile_plots(produces):
             "lagged_retirement": jnp.repeat(0, repeats=len(grid)),
         },
     )
-    numerical_consumption = [
-        result.get("choices", {}).get("consumption", [])
-        for result in simulation_results
-    ]
+    numerical_consumption = np.array(
+        [
+            result.get("choices", {}).get("consumption", [])
+            for result in simulation_results
+        ],
+    )
 
     # Simulate analytical consumption
     analytical_consumption, _ = simulate(
@@ -128,11 +130,10 @@ def task_create_value_function_plots(produces):
     )
 
     # Create plots
-    fig_worker, fig_retired = plot_value_functions(
+    figs = plot_value_functions(
         analytical_solution=analytical_solution,
         numerical_solution=numerical_solution,
         grid=grid,
-        periods=model.model["n_periods"],
     )
-    fig_worker.write_html(produces["worker"])
-    fig_retired.write_html(produces["retired"])
+    figs["worker"].write_html(produces["worker"])
+    figs["retired"].write_html(produces["retired"])

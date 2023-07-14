@@ -58,6 +58,55 @@ def compute_numerical_consumption(
     return simulation_results[0]["choices"]["consumption"]
 
 
+def prepare_plotting_data(
+    analytical_data,
+    numerical_data,
+    grid,
+    n_periods,
+):
+    """Prepare data for plotting.
+
+    Args:
+        analytical_data (list): Analytical consumption values.
+        numerical_data (numpy.ndarray): Numerical consumption values.
+        grid (list): Grid of wealth values.
+        n_periods (int): Number of periods.
+
+    Returns:
+        pd.DataFrame: Data for plotting.
+
+    """
+    analytical = pd.DataFrame(
+        np.array(analytical_data).T,
+        columns=[f"value{i}" for i in range(n_periods)],
+    )
+    numerical = pd.DataFrame(
+        numerical_data.T,
+        columns=[f"value{i}" for i in range(n_periods)],
+    )
+    plot_data = pd.concat(
+        [analytical, numerical],
+        axis=0,
+        keys=["analytical", "numerical"],
+        names=["calculation_procedure", "wealth_index"],
+    ).reset_index()
+    plot_data = (
+        pd.wide_to_long(
+            plot_data,
+            stubnames="value",
+            i=["calculation_procedure", "wealth_index"],
+            j="period",
+        )
+        .reset_index()
+        .set_index(["calculation_procedure", "period", "wealth_index"])
+        .sort_index()
+    )
+    plot_data["wealth"] = np.tile(grid, 2 * n_periods)
+    plot_data = plot_data.reset_index()
+
+    return plot_data
+
+
 def plot_consumption_function(
     model,
     analytical_consumption_fct=None,
@@ -143,32 +192,19 @@ def plot_consumption_profiles(
 
     """
     # Prepare Data for Plotting
-    plot_data_inputs = []
-    for data_type in [analytical_consumption, numerical_consumption]:
-        list_of_series = []
-        for consumption_per_wealth, wealth_level in zip(np.array(data_type).T, grid):
-            list_of_series.append(pd.Series(consumption_per_wealth, name=wealth_level))
-        plot_data_inputs.append(
-            pd.concat(
-                list_of_series,
-                keys=grid,
-                axis=0,
-                names=["wealth", "period"],
-            ).to_frame("consumption"),
-        )
-    plot_data = pd.concat(
-        plot_data_inputs,
-        axis=0,
-        keys=["analytical", "numerical"],
-        names=["calculation_procedure"],
+    n_periods = len(analytical_consumption)
+    plot_data = prepare_plotting_data(
+        analytical_data=analytical_consumption,
+        numerical_data=numerical_consumption,
+        grid=grid,
+        n_periods=n_periods,
     )
-    plot_data = plot_data.reset_index()
 
     # Plot Data
     fig = px.scatter(
-        plot_data,
+        plot_data.reset_index(),
         x="period",
-        y="consumption",
+        y="value",
         color="calculation_procedure",
         animation_frame="wealth",
     )
@@ -177,93 +213,57 @@ def plot_consumption_profiles(
         xaxis_title="Period",
         yaxis_title="Consumption",
         xaxis={
-            "range": [-1, plot_data["period"].max() + 1],
+            "range": [-0.5, plot_data["period"].max() + 1],
         },
         yaxis={
-            "range": [-1, plot_data["consumption"].max() + 1],
+            "range": [-1, plot_data["value"].max() + 1],
         },
     )
     return fig
 
 
-def plot_value_functions(analytical_solution, numerical_solution, grid, periods):
+def plot_value_functions(analytical_solution, numerical_solution, grid):
     """Plot value functions.
 
     Args:
         analytical_solution (dict): Analytical value array.
         numerical_solution (dict): Numerical value array.
         grid (list): Grid of wealth values.
-        periods (int): Number of periods.
 
     Returns:
         go.Figure: Plotly figure.
 
     """
-    plot_data = {}
-    for state in ["worker", "retired"]:
-        plot_data_inputs = []
-        for data_type in [analytical_solution["worker"], numerical_solution["worker"]]:
-            list_of_series = []
-            for values_by_period, period in zip(
-                np.array(data_type),
-                np.arange(periods),
-            ):
-                list_of_series.append(pd.Series(values_by_period, name=period))
-            plot_data_inputs.append(
-                pd.concat(
-                    list_of_series,
-                    keys=np.arange(periods),
-                    axis=0,
-                    names=["period", "wealth"],
-                ).to_frame("values"),
-            )
-        plot_data_state = pd.concat(
-            plot_data_inputs,
-            axis=0,
-            keys=["analytical", "numerical"],
-            names=["calculation_procedure"],
+    # Prepare Data for Plotting
+    figs = {}
+    n_periods = len(analytical_solution["worker"])
+    agent_states = ["worker", "retired"]
+    for state in agent_states:
+        plot_data = prepare_plotting_data(
+            analytical_data=analytical_solution[state],
+            numerical_data=numerical_solution[state],
+            grid=grid,
+            n_periods=n_periods,
+        )
+        figure = px.line(
+            plot_data,
+            x="wealth",
+            y="value",
+            color="calculation_procedure",
+            animation_frame="period",
+        )
+        figure.update_layout(
+            title=f"Value function {state.capitalize()}",
+            xaxis_title="Wealth",
+            yaxis_title="Value",
+            xaxis={
+                "range": [-1, plot_data["wealth"].max() + 1],
+            },
+            yaxis={
+                "range": [-1, plot_data["value"].max() + 1],
+            },
         )
 
-        plot_data_state = plot_data_state.reset_index()
-        plot_data_state["wealth"] = np.tile(grid, 2 * periods)
+        figs[state] = figure
 
-        plot_data[state] = plot_data_state
-
-    fig_worker = px.line(
-        plot_data["worker"],
-        x="wealth",
-        y="values",
-        color="calculation_procedure",
-        animation_frame="period",
-    )
-    fig_worker.update_layout(
-        title="Value functions",
-        xaxis_title="Wealth",
-        yaxis_title="Value",
-        xaxis={
-            "range": [-1, plot_data["worker"]["wealth"].max() + 1],
-        },
-        yaxis={
-            "range": [-1, plot_data["worker"]["values"].max() + 1],
-        },
-    )
-    fig_retired = px.line(
-        plot_data["retired"],
-        x="wealth",
-        y="values",
-        color="calculation_procedure",
-        animation_frame="period",
-    )
-    fig_retired.update_layout(
-        title="Value functions",
-        xaxis_title="Wealth",
-        yaxis_title="Value",
-        xaxis={
-            "range": [-1, plot_data["retired"]["wealth"].max() + 1],
-        },
-        yaxis={
-            "range": [-1, plot_data["retired"]["values"].max() + 1],
-        },
-    )
-
-    return fig_worker, fig_retired
+    return figs
