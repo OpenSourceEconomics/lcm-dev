@@ -7,9 +7,6 @@ from lcm.get_model import get_model
 from lcm_dev.analytical_solution import compute_value_function, simulate
 from lcm_dev.config import BLD
 
-ANALYTICAL_SOLUTION_PATH = BLD.joinpath("analytical_solution")
-
-
 MODELS = {
     "iskhakov_2017_five_periods": get_model("iskhakov_2017_five_periods"),
     "iskhakov_2017_low_delta": get_model("iskhakov_2017_low_delta"),
@@ -23,16 +20,20 @@ for model_name, model in MODELS.items():
         id=model_name,
         kwargs={
             "produces": {
-                "values_worker": ANALYTICAL_SOLUTION_PATH.joinpath(
+                "values_worker": BLD.joinpath(
+                    "analytical_solution",
                     f"{model_name}__values_worker.csv",
                 ),
-                "values_retired": ANALYTICAL_SOLUTION_PATH.joinpath(
+                "values_retired": BLD.joinpath(
+                    "analytical_solution",
                     f"{model_name}__values_retired.csv",
                 ),
-                "consumption": ANALYTICAL_SOLUTION_PATH.joinpath(
+                "consumption": BLD.joinpath(
+                    "analytical_solution",
                     f"{model_name}__consumption.csv",
                 ),
-                "work_decision": ANALYTICAL_SOLUTION_PATH.joinpath(
+                "work_decision": BLD.joinpath(
+                    "analytical_solution",
                     f"{model_name}__work_decision.csv",
                 ),
             },
