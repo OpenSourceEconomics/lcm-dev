@@ -1,7 +1,5 @@
 """Task creating the analytical solution."""
 
-import pickle
-
 import numpy as np
 import pytask
 from lcm.get_model import get_model
@@ -22,9 +20,22 @@ for model_name, model in MODELS.items():
         id=model_name,
         kwargs={
             "produces": {
-                "values": BLD / "analytical_solution" / f"{model_name}_v.pkl",
-                "consumption": BLD / "analytical_solution" / f"{model_name}_c.pkl",
-                "work_decision": BLD / "analytical_solution" / f"{model_name}_work.pkl",
+                "values_worker": BLD.joinpath(
+                    "analytical_solution",
+                    f"{model_name}__values_worker.csv",
+                ),
+                "values_retired": BLD.joinpath(
+                    "analytical_solution",
+                    f"{model_name}__values_retired.csv",
+                ),
+                "consumption": BLD.joinpath(
+                    "analytical_solution",
+                    f"{model_name}__consumption.csv",
+                ),
+                "work_decision": BLD.joinpath(
+                    "analytical_solution",
+                    f"{model_name}__work_decision.csv",
+                ),
             },
             "model": model,
         },
@@ -52,15 +63,13 @@ for model_name, model in MODELS.items():
             wage=model.params["next_wealth"]["wage"],
             n_periods=model.model["n_periods"],
         )
-        pickle.dump(
-            values,
-            produces["values"].open("wb"),
-        )
-        pickle.dump(
-            consumption,
-            produces["consumption"].open("wb"),
-        )
-        pickle.dump(
-            work_decision,
-            produces["work_decision"].open("wb"),
-        )
+
+        # save consumption
+        np.savetxt(produces["consumption"], consumption, delimiter=",")
+
+        # save work decision
+        np.savetxt(produces["work_decision"], work_decision, delimiter=",")
+
+        # save value function
+        for _type in ["worker", "retired"]:
+            np.savetxt(produces[f"values_{_type}"], values[_type], delimiter=",")
