@@ -8,7 +8,7 @@ import json
 import jax.numpy as jnp
 import pytask
 from lcm.entry_point import get_lcm_function
-from lcm.example_models import PHELPS_DEATON
+from lcm.get_model import get_model
 from pybaum import tree_map
 
 from lcm_dev.config import BLD
@@ -16,24 +16,16 @@ from lcm_dev.config import BLD
 
 @pytask.mark.produces(BLD.joinpath("regression_tests", "solution_and_simulation.json"))
 def task_save_lcm_output(produces):
-    model = {**PHELPS_DEATON, "n_periods": 5}
+    """Produce output for lcm regression testing."""
+    model_config = get_model("phelps_deaton_regression_test")
 
-    solve_model, _ = get_lcm_function(model=model, targets="solve")
-    simulate_model, _ = get_lcm_function(model=model, targets="simulate")
+    solve_model, _ = get_lcm_function(model=model_config.model, targets="solve")
+    simulate_model, _ = get_lcm_function(model=model_config.model, targets="simulate")
 
-    params = {
-        "beta": 1.0,
-        "utility": {"delta": 1.0},
-        "next_wealth": {
-            "interest_rate": 0.05,
-            "wage": 1.0,
-        },
-    }
-
-    solution = solve_model(params)
+    solution = solve_model(model_config.params)
 
     simulation = simulate_model(
-        params,
+        params=model_config.params,
         vf_arr_list=solution,
         initial_states={
             "wealth": jnp.array([1.0, 20, 40, 70]),

@@ -33,7 +33,7 @@ for model_name, model in MODELS.items():
                     f"{model_name}__consumption.csv",
                 ),
                 "work_decision": ANALYTICAL_SOLUTION_PATH.joinpath(
-                    "{model_name}__work_decision.csv",
+                    f"{model_name}__work_decision.csv",
                 ),
             },
             "model": model,
