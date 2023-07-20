@@ -23,7 +23,6 @@ dependencies:
 
   # Misc
   - jupyterlab
-  - matplotlib
   - pdbpp
   - pre-commit
   - pydot
